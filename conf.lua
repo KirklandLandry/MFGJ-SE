@@ -15,8 +15,8 @@ function love.conf(t)
  
     t.window.title = "GameJamGame"        -- The window title (string)
     t.window.icon = nil                 -- Filepath to an image to use as the window's icon (string)
-    t.window.width = 320                -- 160 * 2
-    t.window.height = 288               -- 144 * 2
+    t.window.width = 640                -- gameboy screen width: 160
+    t.window.height = 576               -- gameboy screen height: 144
     t.window.borderless = false         -- Remove all border visuals from the window (boolean)
     t.window.resizable = false          -- Let the window be user-resizable (boolean)
     t.window.minwidth = 1               -- Minimum window width if the window is resizable (number)
