@@ -4,7 +4,8 @@ require "aabb"
 require "map"
 require "framerateLock"
 require "player"
-require "game"
+require "game" 
+require "queue"
 
 screenWidth = nil
 screenHeight = nil

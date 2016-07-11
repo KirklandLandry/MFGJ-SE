@@ -18,7 +18,7 @@ function AABB:vectorMove(v)
 end
 
 function AABB:scalarMove(xAdd, yAdd)
-	self.minVec:scalarAdd(xAdd, yAdd)
+	self.minVec:scalarAdd(xAdd, yAdd) 
 	self.maxVec:scalarAdd(xAdd, yAdd)
 end
 

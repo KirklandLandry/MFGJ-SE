@@ -51,7 +51,7 @@ function Vector:leftNormal()
 end
 function Vector:rightNormal()
 	return Vector:new(self.y, -self.x)
-end
+end 
 
 function Vector:scalarAdd(x, y)
 	assert(x~=nil and y~=nil, "blank argument was passed")

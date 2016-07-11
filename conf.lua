@@ -6,7 +6,7 @@
 -- love.conf is called before anything else is loaded
 -- t will be a variable that stores the game 
 -- http://www.love2d.org/wiki/Config_Files
-function love.conf(t)
+function love.conf(t) 
     t.identity = nil                    -- The name of the save directory (string)
     t.version = "0.9.2"                -- The LÖVE version this game was made for (string)
     t.console = false                   -- Attach a console (boolean, Windows only)
