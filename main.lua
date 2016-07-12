@@ -6,6 +6,7 @@ require "framerateLock"
 require "player"
 require "game" 
 require "queue"
+require "ui"
 
 screenWidth = nil
 screenHeight = nil
@@ -27,6 +28,16 @@ a note on equality ...
 	print(test.one, test.two, test.three, test["one"], test["two"], test["three"])
 	-- all assignments should print properly and are all equivalent.
 ]]
+
+-- TODO: 
+-- try to get the scroll to the next screen working 
+-- it should work like...
+-- detect move to next screen
+-- stop doing everything else
+-- draw current screen and next screen 
+-- shift screens until positions are swapped
+-- should last ~ 1 second or less 
+-- no spritebatch updating should be done. should just be 2 screen size png's that're being moved 
 
 function love.load(arg)
 	--for i=1,#arg do print(arg[i]) end

@@ -1,5 +1,5 @@
 
-local player = {box = AABB:new(40, 40, 12, 16), vel = Vector:new(0,0)}
+local player = {box = AABB:new(40, 40, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50}
 
 local playerQuads = nil
 local playerTileset = nil
@@ -34,7 +34,12 @@ function updatePlayer(dt)
 	elseif getKeyDown("right") then 
 		player.vel.x = impulse * dt
 	end
+	
+	if getKeyPress("q") then player.currentHealth = player.currentHealth - 0.25 end 
+	if getKeyPress("e") then player.currentHealth = player.currentHealth + 0.25 end 
 
+	print(player.currentHealth)
+	
 	player.box:scalarMove(player.vel.x, player.vel.y)
 	
 	local tileSize = getTileSize()
@@ -65,4 +70,13 @@ end
 
 function drawPlayer()
 	love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, player.box.minVec.y)
+end
+
+
+function getPlayerHealth()
+	return player.currentHealth
+end
+
+function getPlayerHeartContainers()
+	return player.heartContainers
 end

@@ -1,3 +1,5 @@
+
+-- should this go in the game file?
 local tilesDisplayWidth = nil
 local tilesDisplayHeight = nil
 
@@ -15,11 +17,6 @@ local prevWorldX = nil
 local prevWorldY = nil
 
 local tileSize = nil
-
-
--- !! TODO !!
--- like links awakening, the ui should take 1 tile of the height
--- this makes x and y both multiples of 2
 
 
 function generateTileMap(mapObject)
@@ -83,63 +80,7 @@ end
 end]]
 
 function generateWorld()
-	--[[local map11 = {
-	{2,2, 2,2, 2,2, 2,2, 2,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,1},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,2, 2,2, 2,1, 2,2, 2,2},
-	}
-	
-	local map21 = {
-	{2,2, 2,2, 2,1, 2,2, 2,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,1}, 
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,2, 2,2, 2,2, 2,2, 2,2},
-	}
 
-	local map12 = {
-	{2,2, 2,2, 2,2, 2,2, 2,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{1,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,2, 2,2, 2,1, 2,2, 2,2},
-	}
-
-	local map22 = {
-	{2,2, 2,2, 2,1, 2,2, 2,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{1,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,1, 1,1, 1,1, 1,1, 1,2},
-	{2,2, 2,2, 2,2, 2,2, 2,2},
-	}
-	
-	-- indexed as [y][x]
-	world = {}
-	world[1] = {} 
-	world[2] = {}
-	world[1][1] = map11
-	world[2][1] = map21
-	world[1][2] = map12
-	world[2][2] = map22]]
-	
 	-- start with a blank map. no rooms connecting
 	local mapCodes = {}
 	for y = 1, tilesDisplayHeight do 
@@ -236,21 +177,31 @@ function generateWorld()
 end
 
 
-function loadMap(scaledScreenWidth, scaledScreenHeight)
+function loadMap(tSize, scaledScreenWidth, scaledScreenHeight)
 	worldX = 1 
 	worldY = 1
 	prevWorldX = worldX
 	prevWorldY = worldY
 	
-	tileSize = 16 
+	tileSize = tSize 
 	tilesDisplayWidth = math.floor(scaledScreenWidth/tileSize)
-	tilesDisplayHeight = math.floor(scaledScreenHeight/tileSize)
+	tilesDisplayHeight = math.floor(scaledScreenHeight/tileSize) - 1
 	
 	generateWorld()
 	assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
 	
 	loadTilebatch()
 end
+
+function getTilesDisplayWidth()
+	return tilesDisplayWidth
+end
+
+function getTilesDisplayHeight()
+	return tilesDisplayHeight
+end
+
+
 
 function checkIfMovedToNextTileMap(playerMapX, playerMapY)	
 	local result = Vector:new(0,0)

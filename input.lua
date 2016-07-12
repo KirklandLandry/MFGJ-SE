@@ -14,7 +14,7 @@ function love.keypressed(key)
         if key == "escape" then
             love.event.quit() 
         end
-        --print(key)
+        print(key)
     end
     keys[key] = {down = true} 
 end
