@@ -3,15 +3,17 @@
 -- look here instead https://github.com/mindreframer/love2d-games/blob/master/mari0/shaders/CRT-Simple.frag
 -- and here for more info https://love2d.org/forums/viewtopic.php?t=80354
 
-local scaleValue = 4
+
 -- scale value should be decided based on screen size
 -- should be able to set screen resolutions by menu (multiples of 160x144)
 
 -- have a state for things
 -- menu state or game state or cutscene state. something like that
 
+
+
 local effects = nil
-function loadGame()
+function loadGame(scaleValue)
 	loadPlayer()	
 	loadInput()
 	loadMap(16, love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
@@ -26,7 +28,6 @@ function updateGame(dt)
 end
 
 function drawGame()
-	love.graphics.scale(scaleValue)
 	drawTileSetBatch()
 	drawPlayer()
 

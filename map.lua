@@ -1,7 +1,8 @@
 
--- should this go in the game file?
+-- should these 3 go in the game file?
 local tilesDisplayWidth = nil
 local tilesDisplayHeight = nil
+local tileSize = nil
 
 local currentTileMapQuads = nil
 local currentTilesetImage = nil
@@ -9,14 +10,10 @@ local currentTileSetBatch = nil
 
 local world = nil
 
-
 local worldX = nil 
 local worldY = nil
-
 local prevWorldX = nil 
 local prevWorldY = nil
-
-local tileSize = nil
 
 
 function generateTileMap(mapObject)
@@ -49,7 +46,6 @@ function generateTileMap(mapObject)
 
 	return result
 end 
-
 
 
 --[[function getDirection(mapCodes, currentY, currentX)
@@ -117,55 +113,22 @@ function generateWorld()
 			mapCodes[current.y][current.x+1].left = true 
 		end
 
-		--[[local tries = 1  
-		local success = false
-		while not success do 
-			local rand = love.math.random(1,4)
-			
-			-- if a direction fails, it should go and try to get another direction iff it doesn't already have another connection
-			if rand == 1 and current.y-1 > 1 then -- up one
-				mapCodes[current.y][current.x].up = true 
-				mapCodes[current.y-1][current.x].down = true 
-				success	= true 
-			elseif rand == 2 and current.y+1 < #mapCodes then -- down one
-				mapCodes[current.y][current.x].down = true 
-				mapCodes[current.y+1][current.x].up = true 
-				success = true
-			elseif rand == 3 and current.x-1 > 1  then -- left one
-				mapCodes[current.y][current.x].left = true 
-				mapCodes[current.y][current.x-1].right = true 
-				success = true	
-			elseif rand == 4 and current.x+1 < #mapCodes[current.y] then -- right one
-				mapCodes[current.y][current.x].right = true 
-				mapCodes[current.y][current.x+1].left = true 
-				success = true
-			else 
-			end
-			tries = tries + 1
-			if tries >= 30 then error("map glitch") end 
-		end ]]
-
 		-- check up/down/left/right nodes
-		-- choose a random one to joing with
 		if current.y-1 >= 1 and not mapCodes[current.y-1][current.x].searched then 
 			queue:enqueue({x=current.x, y = current.y - 1})
 			mapCodes[current.y-1][current.x].searched = true
-
 		elseif current.y+1 <= #mapCodes and not mapCodes[current.y+1][current.x].searched then 
 			queue:enqueue({x=current.x, y = current.y + 1})
 			mapCodes[current.y+1][current.x].searched = true
-
 		elseif current.x-1 >= 1 and not mapCodes[current.y][current.x-1].searched then 
 			queue:enqueue({x=current.x - 1, y = current.y})
 			mapCodes[current.y][current.x-1].searched = true
-
 		elseif current.x+1 <= #mapCodes[current.y] and not mapCodes[current.y][current.x+1].searched then 
 			queue:enqueue({x=current.x + 1, y = current.y})
 			mapCodes[current.y][current.x+1].searched = true
 		end
 	end
 
-	
 	world = {}
 	for y = 1, tilesDisplayHeight do 
 		world[y] = {}
@@ -173,7 +136,6 @@ function generateWorld()
 			world[y][x] = generateTileMap(mapCodes[y][x])
 		end
 	end
-	
 end
 
 
@@ -185,7 +147,7 @@ function loadMap(tSize, scaledScreenWidth, scaledScreenHeight)
 	
 	tileSize = tSize 
 	tilesDisplayWidth = math.floor(scaledScreenWidth/tileSize)
-	tilesDisplayHeight = math.floor(scaledScreenHeight/tileSize) - 1
+	tilesDisplayHeight = math.floor(scaledScreenHeight/tileSize) - 1 -- minus 1 to make room for the bottom ui bar
 	
 	generateWorld()
 	assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
@@ -202,8 +164,12 @@ function getTilesDisplayHeight()
 end
 
 
+-- fix this up a bit. moving right or down draws the player completely into the next tilemap 
+-- while left and up draws the player barely. 
+-- this is because it's only taking into account x,y (the top right of the box) and ignoring the width/height 
+-- no technical problems with this, just an aesthetic / consistency problem to address later
 
-function checkIfMovedToNextTileMap(playerMapX, playerMapY)	
+function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)	
 	local result = Vector:new(0,0)
 	
 	-- first check if they moved to a different tilemap on the world map
@@ -211,7 +177,7 @@ function checkIfMovedToNextTileMap(playerMapX, playerMapY)
 		result.x = tilesDisplayWidth * tileSize
 		worldX = worldX - 1 
 	elseif playerMapX > tilesDisplayWidth and worldX + 1 <= #world[worldY] then 
-		result.x = -tilesDisplayWidth * tileSize
+		result.x = (-tilesDisplayWidth * tileSize)
 		worldX = worldX + 1
 	end	
 	if playerMapY < 1 and worldY -1 > 0 then 
@@ -295,7 +261,7 @@ end
 
 function loadTilebatch()
 	-- tilebatch stuff starts here
-	currentTilesetImage = love.graphics.newImage("assets/tilesets/testTileSet.png")
+	currentTilesetImage = love.graphics.newImage("assets/tilesets/testTileSet2.png")
 	currentTilesetImage:setFilter("nearest", "nearest")
 	
 	currentTileMapQuads = {}

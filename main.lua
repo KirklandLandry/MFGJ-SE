@@ -29,7 +29,7 @@ a note on equality ...
 	-- all assignments should print properly and are all equivalent.
 ]]
 
--- TODO: 
+-- NOTE: 
 -- try to get the scroll to the next screen working 
 -- it should work like...
 -- detect move to next screen
@@ -39,12 +39,28 @@ a note on equality ...
 -- should last ~ 1 second or less 
 -- no spritebatch updating should be done. should just be 2 screen size png's that're being moved 
 
+-- will need to implement a z coordinate for going up / down 
+-- if you go into a house, how will that work 
+-- is that a seperate world 
+-- does it exist on another z plane. does it exist on it's own z plane 
+-- same idea for caves and dungeons 
+
+
+directions = {up = "up", down = "down", left = "left", right = "right"}
+
+
+local scaleValue = 4
+
 function love.load(arg)
 	--for i=1,#arg do print(arg[i]) end
+	local success = love.window.setMode(160 * scaleValue, 144 * scaleValue)
+	if not success then error("failed to set window size") end 
+	
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	screenWidth = love.graphics.getWidth()
 	screenHeight = love.graphics.getHeight()
-	loadGame()
+	
+	loadGame(scaleValue)
 	loadFramerateLock()
 end
 
@@ -54,6 +70,7 @@ function love.update(dt)
 end 
 
 function love.draw()
+	love.graphics.scale(scaleValue)
 	drawGame()
 	love.graphics.reset()
 	drawFramerateLock()

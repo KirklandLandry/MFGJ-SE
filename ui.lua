@@ -64,7 +64,7 @@ end
 
 
 function drawBottomBarMenu()
-	for x=0,tilesDisplayWidth do 
+	for x=0,tilesDisplayWidth - 1 do 
 		love.graphics.draw(bottomBarTileImage, x * tileSize, tilesDisplayHeight * tileSize)
 	end 		
 	love.graphics.draw(heartContainerTilesetBatch, 0, 0)
