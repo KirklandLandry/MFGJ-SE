@@ -17,15 +17,70 @@ local prevWorldY = nil
 local tileSize = nil
 
 
-function generateTileMap()
+-- !! TODO !!
+-- like links awakening, the ui should take 1 tile of the height
+-- this makes x and y both multiples of 2
+
+
+function generateTileMap(mapObject)
 	local result = {}
 	for y = 1, tilesDisplayHeight do 
+		result[y] = {}
 		for x = 1, tilesDisplayWidth do 
-		
+			if y == 1 or y == tilesDisplayHeight or x == 1 or x == tilesDisplayWidth then 
+				result[y][x] = 2
+			else 
+				result[y][x] = 1
+			end
 		end
 	end
 	
+	if mapObject.up then 
+		result[1][5] = 1 
+		result[1][6] = 1
+	end 
+	if mapObject.down then 
+		result[tilesDisplayHeight][5] = 1 
+		result[tilesDisplayHeight][6] = 1
+	end 
+	if mapObject.left then 
+		result[5][1] = 1 
+	end 
+	if mapObject.right then 
+		result[5][tilesDisplayWidth] = 1
+	end 
+
+	return result
 end 
+
+
+
+--[[function getDirection(mapCodes, currentY, currentX)
+		
+	local rand = love.math.random(1,4)
+
+	-- if a direction fails, it should go and try to get another direction iff it doesn't already have another connection
+	if currentY-1 > 1 then -- up one
+		return "up"
+		--mapCodes[currentY][currentX].up = true 
+		--mapCodes[currentY-1][currentX].down = true 
+	end 
+	if currentY+1 < #mapCodes then -- down one
+		return "down"
+		--mapCodes[currentY][currentX].down = true 
+		--mapCodes[currentY+1][currentX].up = true 
+	end 
+	if currentX-1 > 1  then -- left one
+		return "left"
+		--mapCodes[currentY][currentX].left = true 
+		--mapCodes[currentY][currentX-1].right = true 
+	end 
+	if currentX+1 < #mapCodes[currentY] then -- right one
+		return "right"
+		--mapCodes[currentY][currentX].right = true 
+		--mapCodes[currentY][currentX+1].left = true 
+	end
+end]]
 
 function generateWorld()
 	--[[local map11 = {
@@ -93,30 +148,88 @@ function generateWorld()
 			mapCodes[y][x] = {xPos = x, yPos = y, left = false, right = false, down = false, up = false, searched = false}
 		end
 	end
-	
+
 	-- breadth first search to join each room.
 	local queue = Queue:new()
 	local add = {x = 1, y = 1}
 	mapCodes[1][1].searched = true
 	queue:enqueue(add)
 	
+	local counter = 0
 	while not queue:isEmpty() do 
 		local current = queue:dequeue()
 		
+		if current.y-1 > 1 then -- up one
+			mapCodes[current.y][current.x].up = true 
+			mapCodes[current.y-1][current.x].down = true 
+		end 
+		if current.y+1 < #mapCodes then -- down one
+			mapCodes[current.y][current.x].down = true 
+			mapCodes[current.y+1][current.x].up = true 
+		end 
+		if current.x-1 > 1  then -- left one
+			mapCodes[current.y][current.x].left = true 
+			mapCodes[current.y][current.x-1].right = true 
+		end 
+		if current.x+1 < #mapCodes[current.y] then -- right one
+			mapCodes[current.y][current.x].right = true 
+			mapCodes[current.y][current.x+1].left = true 
+		end
+
+		--[[local tries = 1  
+		local success = false
+		while not success do 
+			local rand = love.math.random(1,4)
+			
+			-- if a direction fails, it should go and try to get another direction iff it doesn't already have another connection
+			if rand == 1 and current.y-1 > 1 then -- up one
+				mapCodes[current.y][current.x].up = true 
+				mapCodes[current.y-1][current.x].down = true 
+				success	= true 
+			elseif rand == 2 and current.y+1 < #mapCodes then -- down one
+				mapCodes[current.y][current.x].down = true 
+				mapCodes[current.y+1][current.x].up = true 
+				success = true
+			elseif rand == 3 and current.x-1 > 1  then -- left one
+				mapCodes[current.y][current.x].left = true 
+				mapCodes[current.y][current.x-1].right = true 
+				success = true	
+			elseif rand == 4 and current.x+1 < #mapCodes[current.y] then -- right one
+				mapCodes[current.y][current.x].right = true 
+				mapCodes[current.y][current.x+1].left = true 
+				success = true
+			else 
+			end
+			tries = tries + 1
+			if tries >= 30 then error("map glitch") end 
+		end ]]
+
 		-- check up/down/left/right nodes
 		-- choose a random one to joing with
 		if current.y-1 >= 1 and not mapCodes[current.y-1][current.x].searched then 
-			queue.enqueue()
-		elseif 
-		
+			queue:enqueue({x=current.x, y = current.y - 1})
+			mapCodes[current.y-1][current.x].searched = true
+
+		elseif current.y+1 <= #mapCodes and not mapCodes[current.y+1][current.x].searched then 
+			queue:enqueue({x=current.x, y = current.y + 1})
+			mapCodes[current.y+1][current.x].searched = true
+
+		elseif current.x-1 >= 1 and not mapCodes[current.y][current.x-1].searched then 
+			queue:enqueue({x=current.x - 1, y = current.y})
+			mapCodes[current.y][current.x-1].searched = true
+
+		elseif current.x+1 <= #mapCodes[current.y] and not mapCodes[current.y][current.x+1].searched then 
+			queue:enqueue({x=current.x + 1, y = current.y})
+			mapCodes[current.y][current.x+1].searched = true
+		end
 	end
-	
+
 	
 	world = {}
 	for y = 1, tilesDisplayHeight do 
 		world[y] = {}
 		for x = 1, tilesDisplayWidth do 
-			world[y][x] = generateTileMap()
+			world[y][x] = generateTileMap(mapCodes[y][x])
 		end
 	end
 	
@@ -210,7 +323,19 @@ function getTileSize()
 end
 
 function updateMap()
+
+	if getKeyPress("a") then worldX = worldX - 1 end 
+	if getKeyPress("d") then worldX = worldX + 1 end 
+	if getKeyPress("w") then worldY = worldY - 1 end 
+	if getKeyPress("s") then worldY = worldY + 1 end 
+
+	if worldX < 1 then worldX = 1 end 
+	if worldY < 1 then worldY = 1 end 
+	if worldX > tilesDisplayWidth then worldX = tilesDisplayWidth end 
+	if worldY > tilesDisplayHeight then worldY = tilesDisplayHeight end 
+
 	if prevWorldX ~= worldX or prevWorldY ~= worldY then 
+		print(worldX, worldY)
 		prevWorldX = worldX 
 		prevWorldY = worldY
 		updateTileSetBatch(world[worldY][worldX])
