@@ -1,6 +1,6 @@
 
 
-local player = {box = AABB:new(40, 40, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil}
+local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil}
 
 local playerQuads = nil
 local playerTileset = nil
@@ -33,6 +33,7 @@ local animationTimerMax = 1
 		if animationIndex > 2 then animationIndex = 1 end
 	end
 end]]
+
 
 function updatePlayer(dt)
 	
@@ -72,19 +73,45 @@ function updatePlayer(dt)
 	local playerMapX = math.floor(player.box.minVec.x / tileSize) + 1
 	local playerMapY = math.floor(player.box.minVec.y / tileSize) + 1
  
+	local shiftVector = (checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY))
+	if shiftVector ~= nil then 
+		
+	else 
+	
+	end
 	player.box:vectorMove(checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY))
+	--shiftDestinationVector = checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY)
+	--checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY)
 	
 	if (checkTileMapCollision(player.box, playerMapX, playerMapY)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
 	
 	--animationTimer(dt)
 end
 
+function shiftPlayer(dtShiftX, dtShiftY)
+	--player.box:scalarMove(dtShiftX, dtShiftY)
+	--player.box:scalarReposition(88, player.box.minVec.y)
+end
 
+function shiftPlayerComplete()
+	--player.box:scalarReposition(88, player.box.minVec.y)
+end
 
-
-
-function drawPlayer()
-	love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, player.box.minVec.y)
+function drawPlayer(screenShiftX, screenShiftY)
+	if gameState == GameStates.neutral or 
+		math.floor(screenShiftX) == math.floor(player.box.minVec.x) or 
+		math.floor(screenShiftY) == math.floor(player.box.minVec.y) then
+	
+		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, player.box.minVec.y)
+	elseif gameState == GameStates.scrollingRight then 
+		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], baseScreenWidth + screenShiftX, player.box.minVec.y)
+	elseif gameState == GameStates.scrollingLeft then 
+		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], screenShiftX, player.box.minVec.y)
+	elseif gameState == GameStates.scrollingUp then 
+		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, screenShiftY)
+	elseif gameState == GameStates.scrollingDown then 
+		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, baseScreenHeight - 16 + screenShiftY)	
+	end
 end
 
 

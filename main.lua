@@ -8,36 +8,25 @@ require "game"
 require "queue"
 require "ui"
 
+-- this is the actual physical window size 
 screenWidth = nil
 screenHeight = nil
 
--- for later...
--- a lua state system
---[[
-State = {one = "waiting", two = "active"}
-local state = State.one 
-local state2 = State.two 
-if state = State.one then 
-	print("currently waiting")
-end
-
-a note on equality ...
-	local test = {one = "one"}
-	test.two = "two"
-	test["three"] = "three"
-	print(test.one, test.two, test.three, test["one"], test["two"], test["three"])
-	-- all assignments should print properly and are all equivalent.
-]]
+-- this is the gameboy screen size. 
+-- The game is scaled up from this, but game values should measure against this 
+baseScreenWidth = 160
+baseScreenHeight = 144
 
 -- NOTE: 
--- try to get the scroll to the next screen working 
--- it should work like...
--- detect move to next screen
--- stop doing everything else
--- draw current screen and next screen 
--- shift screens until positions are swapped
--- should last ~ 1 second or less 
--- no spritebatch updating should be done. should just be 2 screen size png's that're being moved 
+-- need to change how tilemap switching works
+-- when you move right, detect the change based on the player min x 
+-- when you move left, detect the change based on the player max x 
+-- this makes the map switching look more consistent 
+
+-- WARNING: 
+-- player map switching is messy. 
+-- the way it's setup you can see the player in their last position for 1 frame 
+-- it's setup cheaply and it's not great, but it works 
 
 -- will need to implement a z coordinate for going up / down 
 -- if you go into a house, how will that work 
@@ -46,12 +35,11 @@ a note on equality ...
 -- same idea for caves and dungeons 
 
 directions = {up = "up", down = "down", left = "left", right = "right"}
-
 local scaleValue = 4
 
 function love.load(arg)
 	--for i=1,#arg do print(arg[i]) end
-	local success = love.window.setMode(160 * scaleValue, 144 * scaleValue)
+	local success = love.window.setMode(baseScreenWidth * scaleValue, baseScreenHeight * scaleValue)
 	if not success then error("failed to set window size") end 
 	
 	love.graphics.setDefaultFilter("nearest", "nearest")

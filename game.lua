@@ -10,31 +10,80 @@
 -- have a state for things
 -- menu state or game state or cutscene state. something like that
 
-
+GameStates = {scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight", neutral = "neutral", scrollComplete = "scrollComplete"}
+gameState = nil 
 
 local effects = nil
 function loadGame(scaleValue)
+	gameState = GameStates.neutral
+
 	loadPlayer()	
 	loadInput()
 	loadMap(16, love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
 	-- first 2 functions are in map. they shouldn't really be, should be more general
+	-- 16 is the tile size 
 	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), 16, getPlayerHeartContainers(), getPlayerHealth())
 end
 
+local screenShiftAmount = 230
+--local dtShiftX = 0 
+--local dtShiftY = 0
+local screenShiftX = 0 
+local screenShiftY = 0
+
 function updateGame(dt)
-	updateMap()
-	updatePlayer(dt)
-	updateUi(dt , getPlayerHeartContainers(), getPlayerHealth())
+	if gameState == GameStates.scrollComplete then gameState = GameStates.neutral end
+	
+	if gameState == GameStates.neutral then 
+		updatePlayer(dt)
+		updateMap()
+		
+		updateUi(dt , getPlayerHeartContainers(), getPlayerHealth())
+	else
+		updateScreenShift(dt)
+		--shiftPlayer(dtShiftX, dtShiftY)
+		if gameState == GameStates.scrollComplete then 
+			--shiftPlayerComplete()
+			updateMap()		
+		end
+	end
 end
 
-function drawGame()
-	drawTileSetBatch()
-	drawPlayer()
 
+function drawGame()
+	drawTileSetBatch(screenShiftX, screenShiftY)
+	drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
 	--[[effects:draw(function()
 		drawTileSetBatch()
 		drawPlayer()
     end)]]
-
 end 
+
+
+function updateScreenShift(dt)
+	if gameState == GameStates.scrollingUp then 
+		screenShiftY = screenShiftY + (screenShiftAmount * dt)
+		--dtShiftY = (screenShiftAmount * dt)
+	elseif gameState == GameStates.scrollingDown then
+		screenShiftY = screenShiftY - (screenShiftAmount * dt)
+		--dtShiftY = -(screenShiftAmount * dt)
+	elseif gameState == GameStates.scrollingLeft then
+		screenShiftX = screenShiftX + (screenShiftAmount * dt)
+		--dtShiftX = (screenShiftAmount * dt)
+	elseif gameState == GameStates.scrollingRight then
+		screenShiftX = screenShiftX - (screenShiftAmount * dt)
+		--dtShiftX = -(screenShiftAmount * dt)
+	end
+	
+	if math.abs(screenShiftX) >= baseScreenWidth then 
+		screenShiftX = 0
+		gameState = GameStates.scrollComplete
+		
+	elseif math.abs(screenShiftY) >= baseScreenHeight - 16 then -- 16 is the tile size THIS SHOULD BE MOVED FROM MAP TO BE GLOBAL
+		screenShiftY = 0
+		gameState = GameStates.scrollComplete
+		
+	end
+	
+end

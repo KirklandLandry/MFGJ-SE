@@ -16,67 +16,48 @@ local prevWorldX = nil
 local prevWorldY = nil
 
 
+local openTile = 1 
+local filledTile = 2
+
+
 function generateTileMap(mapObject)
 	local result = {}
 	for y = 1, tilesDisplayHeight do 
 		result[y] = {}
 		for x = 1, tilesDisplayWidth do 
 			if y == 1 or y == tilesDisplayHeight or x == 1 or x == tilesDisplayWidth then 
-				result[y][x] = 2
+				result[y][x] = filledTile
 			else 
-				result[y][x] = 1
+				result[y][x] = openTile
 			end
 		end
 	end
 	
 	if mapObject.up then 
-		result[1][5] = 1 
-		result[1][6] = 1
+		result[1][5] = openTile 
+		result[1][6] = openTile
 	end 
 	if mapObject.down then 
-		result[tilesDisplayHeight][5] = 1 
-		result[tilesDisplayHeight][6] = 1
+		result[tilesDisplayHeight][5] = openTile 
+		result[tilesDisplayHeight][6] = openTile
 	end 
 	if mapObject.left then 
-		result[5][1] = 1 
+		result[5][1] = openTile 
 	end 
 	if mapObject.right then 
-		result[5][tilesDisplayWidth] = 1
+		result[5][tilesDisplayWidth] = openTile
 	end 
 
 	return result
 end 
 
 
---[[function getDirection(mapCodes, currentY, currentX)
-		
-	local rand = love.math.random(1,4)
+function convertGridToTilemapWorld()
+	
+end
 
-	-- if a direction fails, it should go and try to get another direction iff it doesn't already have another connection
-	if currentY-1 > 1 then -- up one
-		return "up"
-		--mapCodes[currentY][currentX].up = true 
-		--mapCodes[currentY-1][currentX].down = true 
-	end 
-	if currentY+1 < #mapCodes then -- down one
-		return "down"
-		--mapCodes[currentY][currentX].down = true 
-		--mapCodes[currentY+1][currentX].up = true 
-	end 
-	if currentX-1 > 1  then -- left one
-		return "left"
-		--mapCodes[currentY][currentX].left = true 
-		--mapCodes[currentY][currentX-1].right = true 
-	end 
-	if currentX+1 < #mapCodes[currentY] then -- right one
-		return "right"
-		--mapCodes[currentY][currentX].right = true 
-		--mapCodes[currentY][currentX+1].left = true 
-	end
-end]]
 
 function generateWorld()
-
 	-- start with a blank map. no rooms connecting
 	local mapCodes = {}
 	for y = 1, tilesDisplayHeight do 
@@ -241,7 +222,6 @@ function getTileSize()
 end
 
 function updateMap()
-
 	if getKeyPress("a") then worldX = worldX - 1 end 
 	if getKeyPress("d") then worldX = worldX + 1 end 
 	if getKeyPress("w") then worldY = worldY - 1 end 
@@ -252,11 +232,33 @@ function updateMap()
 	if worldX > tilesDisplayWidth then worldX = tilesDisplayWidth end 
 	if worldY > tilesDisplayHeight then worldY = tilesDisplayHeight end 
 
+	if gameState == GameStates.scrollComplete then 
+	
+		updateTileSetBatch(world[worldY][worldX])
+	end
+	
 	if prevWorldX ~= worldX or prevWorldY ~= worldY then 
 		print(worldX, worldY)
+		
+		if worldX > prevWorldX then 
+			gameState = GameStates.scrollingRight
+			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.right)
+		elseif worldX < prevWorldX then 
+			gameState = GameStates.scrollingLeft
+			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.left)
+		elseif worldY > prevWorldY then 
+			gameState = GameStates.scrollingDown
+			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.down)
+		elseif worldY < prevWorldY then 
+			gameState = GameStates.scrollingUp
+			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.up)
+		else 
+			updateTileSetBatch(world[worldY][worldX])
+		end
+
 		prevWorldX = worldX 
 		prevWorldY = worldY
-		updateTileSetBatch(world[worldY][worldX])
+		--updateTileSetBatch(world[worldY][worldX])
 	end
 end
 
@@ -266,23 +268,55 @@ function loadTilebatch()
 	currentTilesetImage:setFilter("nearest", "nearest")
 	
 	currentTileMapQuads = {}
-	currentTileMapQuads[1] = love.graphics.newQuad(0,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
-	currentTileMapQuads[2] = love.graphics.newQuad(tileSize,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
+	currentTileMapQuads[openTile] = love.graphics.newQuad(0,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
+	currentTileMapQuads[filledTile] = love.graphics.newQuad(tileSize,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
 	
 	currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight)
 	updateTileSetBatch(world[worldY][worldX])
 end
 
-function updateTileSetBatch(tileMapToDraw)
+function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPlacement)	
+	local xOffset = 0 
+	local yOffset = 0
+	if secondTileMapToDraw ~= nil then 
+		assert(secondTileMapPlacement ~= nil and (secondTileMapPlacement == directions.up or secondTileMapPlacement == directions.down or secondTileMapPlacement == directions.left or secondTileMapPlacement == directions.right))
+		if secondTileMapPlacement == directions.up then 
+			yOffset = -baseScreenHeight + tileSize
+		elseif secondTileMapPlacement == directions.down then
+			yOffset = baseScreenHeight - tileSize
+		elseif secondTileMapPlacement == directions.left then
+			xOffset = -baseScreenWidth
+		elseif secondTileMapPlacement == directions.right then
+			xOffset = baseScreenWidth
+		end
+		-- the spritebatch will be twice as big (drawing two screens), so you need to tell it that (so *2 the size)
+		currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight * 2)
+	else 
+		currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight)
+	end	
+	
 	currentTileSetBatch:clear()
 	for y=1,tilesDisplayHeight do
 		for x=1, tilesDisplayWidth do 
 			currentTileSetBatch:add(currentTileMapQuads[tileMapToDraw[y][x]], (x-1) * tileSize, (y-1) * tileSize)
+			if secondTileMapToDraw ~= nil then 
+				assert(secondTileMapPlacement ~= nil)	
+				currentTileSetBatch:add(currentTileMapQuads[secondTileMapToDraw[y][x] ], ((x-1) * tileSize) + xOffset, ((y-1) * tileSize) + yOffset)
+			end
 		end
 	end
-	currentTileSetBatch:flush()
+	--[[
+	if secondTileMapToDraw ~= nil then 
+		assert(secondTileMapPlacement ~= nil)
+		for y=1,tilesDisplayHeight do
+			for x=1, tilesDisplayWidth do 			
+				currentTileSetBatch:add(currentTileMapQuads[tileMapToDraw[y][x] ], ((x-1) * tileSize) + xOffset, ((y-1) * tileSize) + yOffset)			
+			end
+		end
+	end
+	currentTileSetBatch:flush()]]
 end
 
-function drawTileSetBatch()
-	love.graphics.draw(currentTileSetBatch, 0, 0)
+function drawTileSetBatch(screenShiftX, screenShiftY)
+	love.graphics.draw(currentTileSetBatch, screenShiftX, screenShiftY)
 end

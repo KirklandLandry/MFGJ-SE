@@ -12,6 +12,13 @@ function AABB:new(x, y, width, height)
 	return o
 end
  
+function AABB:scalarReposition(x,y)
+	self.minVec.x = x 
+	self.minVec.y = y 
+	self.maxVec.x = x + self.width 
+	self.maxVec.y = y + self.height
+end
+ 
 function AABB:vectorMove(v)
 	self.minVec:vectorAdd(v)
 	self.maxVec:vectorAdd(v)
