@@ -19,10 +19,10 @@ function loadGame(scaleValue)
 
 	loadPlayer()	
 	loadInput()
-	loadMap(16, love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
+	loadMap(love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
 	-- first 2 functions are in map. they shouldn't really be, should be more general
 	-- 16 is the tile size 
-	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), 16, getPlayerHeartContainers(), getPlayerHealth())
+	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), getPlayerHeartContainers(), getPlayerHealth())
 end
 
 local screenShiftAmount = 230
@@ -36,7 +36,7 @@ function updateGame(dt)
 	
 	if gameState == GameStates.neutral then 
 		updatePlayer(dt)
-		updateMap()
+		updateMap(dt)
 		
 		updateUi(dt , getPlayerHeartContainers(), getPlayerHealth())
 	else
@@ -44,7 +44,7 @@ function updateGame(dt)
 		--shiftPlayer(dtShiftX, dtShiftY)
 		if gameState == GameStates.scrollComplete then 
 			--shiftPlayerComplete()
-			updateMap()		
+			updateMap(dt)		
 		end
 	end
 end
@@ -54,10 +54,6 @@ function drawGame()
 	drawTileSetBatch(screenShiftX, screenShiftY)
 	drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
-	--[[effects:draw(function()
-		drawTileSetBatch()
-		drawPlayer()
-    end)]]
 end 
 
 
@@ -78,8 +74,7 @@ function updateScreenShift(dt)
 	
 	if math.abs(screenShiftX) >= baseScreenWidth then 
 		screenShiftX = 0
-		gameState = GameStates.scrollComplete
-		
+		gameState = GameStates.scrollComplete		
 	elseif math.abs(screenShiftY) >= baseScreenHeight - 16 then -- 16 is the tile size THIS SHOULD BE MOVED FROM MAP TO BE GLOBAL
 		screenShiftY = 0
 		gameState = GameStates.scrollComplete

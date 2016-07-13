@@ -12,7 +12,6 @@ bottomBarTileImage:setFilter("nearest", "nearest")
 
 local tilesDisplayWidth = nil
 local tilesDisplayHeight = nil
-local tileSize = nil
 
 local heartContainerTilesetImage = nil 
 local heartContainerTilesetBatch = nil
@@ -41,11 +40,10 @@ function loadHeartContainerTilebatch(playerHeartContainers, playerHealth)
 end
 
 
-function loadUi(tDisplayWidth, tDisplayHeight, tSize, playerHeartContainers, playerHealth)
-	assert(tDisplayHeight ~= nil and tDisplayWidth ~= nil and tSize ~= nil)
+function loadUi(tDisplayWidth, tDisplayHeight, playerHeartContainers, playerHealth)
+	assert(tDisplayHeight ~= nil and tDisplayWidth ~= nil)
 	tilesDisplayWidth = tDisplayWidth
 	tilesDisplayHeight = tDisplayHeight
-	tileSize = tSize
 	
 	loadHeartContainerTilebatch(playerHeartContainers, playerHealth)
 end
@@ -65,7 +63,7 @@ end
 
 function drawBottomBarMenu()
 	for x=0,tilesDisplayWidth - 1 do 
-		love.graphics.draw(bottomBarTileImage, x * tileSize, tilesDisplayHeight * tileSize)
+		love.graphics.draw(bottomBarTileImage, x * globalTileSize, tilesDisplayHeight * globalTileSize)
 	end 		
 	love.graphics.draw(heartContainerTilesetBatch, 0, 0)
 end 
@@ -95,7 +93,7 @@ function updateHeartContainerTilebatch()
 		else 
 			heartIndex = 1 
 		end
-		heartContainerTilesetBatch:add(heartContainerTilesetQuads[heartIndex], (tileSize * 6) + 8 * x  - (y*8), (tilesDisplayHeight * tileSize)+ y)
+		heartContainerTilesetBatch:add(heartContainerTilesetQuads[heartIndex], (globalTileSize * 6) + 8 * x  - (y*8), (tilesDisplayHeight * globalTileSize)+ y)
 		if x>=7 then y = 8 end 
 	end
 	heartContainerTilesetBatch:flush()

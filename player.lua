@@ -21,11 +21,10 @@ function loadPlayer()
 	
 end 
 
-
-local animationTimerValue = 0 
 local animationIndex = 1
+--[[local animationTimerValue = 0 
 local animationTimerMax = 1
---[[function animationTimer(dt)
+function animationTimer(dt)
 	animationTimerValue = animationTimerValue + dt 
 	if animationTimerValue > animationTimerMax then 
 		animationTimerValue = 0 
@@ -38,7 +37,6 @@ end]]
 function updatePlayer(dt)
 	
 	local impulse = 40
-
 	player.vel.x = 0
 	player.vel.y = 0
 	
@@ -67,23 +65,22 @@ function updatePlayer(dt)
 	
 	player.box:scalarMove(player.vel.x, player.vel.y)
 	
-	local tileSize = getTileSize()
-	
-	-- + 1 because it'll floor to 0 and tilemaps (really tables) all start at <1,1> 
-	local playerMapX = math.floor(player.box.minVec.x / tileSize) + 1
-	local playerMapY = math.floor(player.box.minVec.y / tileSize) + 1
  
-	local shiftVector = (checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY))
-	if shiftVector ~= nil then 
+	local playerMapCoords = getTileCoordinate(player.box.minVec.x, player.box.minVec.y)
+ 
+	local shiftVector = (checkIfMovedToNextTileMap(player.box, playerMapCoords.x, playerMapCoords.y))
+	player.box:vectorMove(shiftVector)
+	
+	if (checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
+
+	--[[if shiftVector ~= nil then 
 		
 	else 
 	
-	end
-	player.box:vectorMove(checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY))
+	end]]
 	--shiftDestinationVector = checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY)
 	--checkIfMovedToNextTileMap(player.box, playerMapX, playerMapY)
 	
-	if (checkTileMapCollision(player.box, playerMapX, playerMapY)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
 	
 	--animationTimer(dt)
 end

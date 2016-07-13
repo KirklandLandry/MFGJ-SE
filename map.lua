@@ -1,8 +1,7 @@
-
 -- should these 3 go in the game file?
 local tilesDisplayWidth = nil
 local tilesDisplayHeight = nil
-local tileSize = nil
+
 
 local currentTileMapQuads = nil
 local currentTilesetImage = nil
@@ -15,37 +14,36 @@ local worldY = nil
 local prevWorldX = nil 
 local prevWorldY = nil
 
-
 local openTile = 1 
 local filledTile = 2
 
 
 function generateTileMap(mapObject)
-	local result = {}
+	local result = {base = {}, enemies = {SimpleEnemy:new(math.random(32,90),math.random(32,90),16,16)}}
 	for y = 1, tilesDisplayHeight do 
-		result[y] = {}
+		result.base[y] = {}
 		for x = 1, tilesDisplayWidth do 
 			if y == 1 or y == tilesDisplayHeight or x == 1 or x == tilesDisplayWidth then 
-				result[y][x] = filledTile
+				result.base[y][x] = filledTile
 			else 
-				result[y][x] = openTile
+				result.base[y][x] = openTile
 			end
 		end
 	end
 	
 	if mapObject.up then 
-		result[1][5] = openTile 
-		result[1][6] = openTile
+		result.base[1][5] = openTile 
+		result.base[1][6] = openTile
 	end 
 	if mapObject.down then 
-		result[tilesDisplayHeight][5] = openTile 
-		result[tilesDisplayHeight][6] = openTile
+		result.base[tilesDisplayHeight][5] = openTile 
+		result.base[tilesDisplayHeight][6] = openTile
 	end 
 	if mapObject.left then 
-		result[5][1] = openTile 
+		result.base[5][1] = openTile 
 	end 
 	if mapObject.right then 
-		result[5][tilesDisplayWidth] = openTile
+		result.base[5][tilesDisplayWidth] = openTile
 	end 
 
 	return result
@@ -117,18 +115,19 @@ function generateWorld()
 			world[y][x] = generateTileMap(mapCodes[y][x])
 		end
 	end
+	print("tilesDisplayWidth = "..tilesDisplayWidth, "tilesDisplayHeight = "..tilesDisplayHeight)
+	print("world generated with size ("..#world[1]..", "..#world..")")
 end
 
 
-function loadMap(tSize, scaledScreenWidth, scaledScreenHeight)
+function loadMap(scaledScreenWidth, scaledScreenHeight)
 	worldX = 1 
 	worldY = 1
 	prevWorldX = worldX
 	prevWorldY = worldY
 	
-	tileSize = tSize 
-	tilesDisplayWidth = math.floor(scaledScreenWidth/tileSize)
-	tilesDisplayHeight = math.floor(scaledScreenHeight/tileSize) - 1 -- minus 1 to make room for the bottom ui bar
+	tilesDisplayWidth = math.floor(scaledScreenWidth/globalTileSize)
+	tilesDisplayHeight = math.floor(scaledScreenHeight/globalTileSize) - 1 -- minus 1 to make room for the bottom ui bar
 	
 	generateWorld()
 	assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
@@ -155,49 +154,49 @@ function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)
 	
 	-- first check if they moved to a different tilemap on the world map
 	if playerMapX < 1 and worldX -1 > 0 then 
-		result.x = tilesDisplayWidth * tileSize
+		result.x = tilesDisplayWidth * globalTileSize
 		worldX = worldX - 1 
 	elseif playerMapX > tilesDisplayWidth and worldX + 1 <= #world[worldY] then 
-		result.x = (-tilesDisplayWidth * tileSize)
+		result.x = (-tilesDisplayWidth * globalTileSize)
 		worldX = worldX + 1
 	end	
 	if playerMapY < 1 and worldY -1 > 0 then 
-		result.y = tilesDisplayHeight * tileSize
+		result.y = tilesDisplayHeight * globalTileSize
 		worldY = worldY - 1
 	elseif playerMapY > tilesDisplayHeight and worldY + 1 <= #world then 
-		result.y = -tilesDisplayHeight * tileSize
+		result.y = -tilesDisplayHeight * globalTileSize
 		worldY = worldY + 1
 	end
 	
 	return (result)
 end
 
-function checkTileMapCollision(box, playerMapX, playerMapY)
+function checkTileMapCollision(box, tileX, tileY)
 	local yMin, yMax, xMin, xMax
-	if playerMapX <= 1 then 
+	if tileX <= 1 then 
 		xMin = 1 
-	elseif playerMapX >= tilesDisplayWidth then 
+	elseif tileX >= tilesDisplayWidth then 
 		xMin = tilesDisplayWidth - 2 
 	else 
-		xMin = playerMapX - 1 
+		xMin = tileX - 1 
 	end
 	
-	if playerMapY <= 1 then 
+	if tileY <= 1 then 
 		yMin = 1
-	elseif playerMapY >= tilesDisplayHeight then 
+	elseif tileY >= tilesDisplayHeight then 
 		yMin = tilesDisplayHeight - 2 
 	else 
-		yMin = playerMapY - 1 
+		yMin = tileY - 1 
 	end
 	
-		
+	
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
-	local currentWorldTileMap = world[worldY][worldX]
+	local currentWorldTileMap = world[worldY][worldX].base
 	for y = yMin, yMin + 2 do 
 		for x = xMin, xMin + 2 do 
 			if currentWorldTileMap[y][x] == 2 then		
-				if AABBvsTileMapCoords(box, (x-1)*tileSize,(y-1)*tileSize,((x-1)*tileSize)+tileSize,((y-1)*tileSize)+tileSize) then 					
+				if AABBvsTileMapCoords(box, (x-1)*globalTileSize,(y-1)*globalTileSize,((x-1)*globalTileSize)+globalTileSize,((y-1)*globalTileSize)+globalTileSize) then 					
 					-- if we're here there's been a collision. need to figure out on which axis and resolve
 					return true
 				end
@@ -207,21 +206,13 @@ function checkTileMapCollision(box, playerMapX, playerMapY)
 	return false
 end
 
-function AABBvsTileMapCoords(a, x1,y1,x2,y2)
-  -- Exit with no intersection if found separated along an axis
-  if(a.maxVec.x < x1 or a.minVec.x > x2) then return false end
-  -- tile collider y is the bottom 30% of a sprite (70% of the sprite offset from the minvec.y) 
-  -- this gives the appearance of 3D viewing as it let's you overlap vertically
-  if(a.maxVec.y < y1 or a:getTileColliderY() > y2) then return false end
-  -- No separating axis found, therefore there is at least one overlapping axis
-  return true
+function getTileCoordinate(x, y)
+	-- + 1 because it'll floor to 0 and tilemaps (tables in general) all start at <1,1> 
+	local result = Vector:new(math.floor(x / globalTileSize) + 1, math.floor(y / globalTileSize) + 1)
+	return result 
 end
 
-function getTileSize()
-	return tileSize
-end
-
-function updateMap()
+function updateMap(dt)
 	if getKeyPress("a") then worldX = worldX - 1 end 
 	if getKeyPress("d") then worldX = worldX + 1 end 
 	if getKeyPress("w") then worldY = worldY - 1 end 
@@ -232,33 +223,39 @@ function updateMap()
 	if worldX > tilesDisplayWidth then worldX = tilesDisplayWidth end 
 	if worldY > tilesDisplayHeight then worldY = tilesDisplayHeight end 
 
+
 	if gameState == GameStates.scrollComplete then 
+		print("map scroll complete")
+		updateTileSetBatch(world[worldY][worldX].base)	
+	end
 	
-		updateTileSetBatch(world[worldY][worldX])
+	for i=1, #world[prevWorldY][prevWorldX].enemies do 
+		world[prevWorldY][prevWorldX].enemies[i]:update(dt)
 	end
 	
 	if prevWorldX ~= worldX or prevWorldY ~= worldY then 
-		print(worldX, worldY)
+		print("\ncurrent: "..worldX..", "..worldY, "previous: "..prevWorldX..", "..prevWorldY)
+		print("current room contains...\n"..#world[worldY][worldX].enemies.." enemies")
+		print("map scroll started")
 		
 		if worldX > prevWorldX then 
 			gameState = GameStates.scrollingRight
-			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.right)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.right)
 		elseif worldX < prevWorldX then 
 			gameState = GameStates.scrollingLeft
-			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.left)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.left)
 		elseif worldY > prevWorldY then 
 			gameState = GameStates.scrollingDown
-			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.down)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.down)
 		elseif worldY < prevWorldY then 
 			gameState = GameStates.scrollingUp
-			updateTileSetBatch(world[prevWorldY][prevWorldX], world[worldY][worldX], directions.up)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.up)
 		else 
-			updateTileSetBatch(world[worldY][worldX])
+		-- this should never happen
+			updateTileSetBatch(world[worldY][worldX].base)
 		end
-
 		prevWorldX = worldX 
 		prevWorldY = worldY
-		--updateTileSetBatch(world[worldY][worldX])
 	end
 end
 
@@ -268,11 +265,11 @@ function loadTilebatch()
 	currentTilesetImage:setFilter("nearest", "nearest")
 	
 	currentTileMapQuads = {}
-	currentTileMapQuads[openTile] = love.graphics.newQuad(0,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
-	currentTileMapQuads[filledTile] = love.graphics.newQuad(tileSize,0,tileSize, tileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
+	currentTileMapQuads[openTile] = love.graphics.newQuad(0,0,globalTileSize, globalTileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
+	currentTileMapQuads[filledTile] = love.graphics.newQuad(globalTileSize,0,globalTileSize, globalTileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
 	
 	currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight)
-	updateTileSetBatch(world[worldY][worldX])
+	updateTileSetBatch(world[worldY][worldX].base)
 end
 
 function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPlacement)	
@@ -281,9 +278,9 @@ function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPla
 	if secondTileMapToDraw ~= nil then 
 		assert(secondTileMapPlacement ~= nil and (secondTileMapPlacement == directions.up or secondTileMapPlacement == directions.down or secondTileMapPlacement == directions.left or secondTileMapPlacement == directions.right))
 		if secondTileMapPlacement == directions.up then 
-			yOffset = -baseScreenHeight + tileSize
+			yOffset = -baseScreenHeight + globalTileSize
 		elseif secondTileMapPlacement == directions.down then
-			yOffset = baseScreenHeight - tileSize
+			yOffset = baseScreenHeight - globalTileSize
 		elseif secondTileMapPlacement == directions.left then
 			xOffset = -baseScreenWidth
 		elseif secondTileMapPlacement == directions.right then
@@ -298,25 +295,23 @@ function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPla
 	currentTileSetBatch:clear()
 	for y=1,tilesDisplayHeight do
 		for x=1, tilesDisplayWidth do 
-			currentTileSetBatch:add(currentTileMapQuads[tileMapToDraw[y][x]], (x-1) * tileSize, (y-1) * tileSize)
+			currentTileSetBatch:add(currentTileMapQuads[tileMapToDraw[y][x]], (x-1) * globalTileSize, (y-1) * globalTileSize)
 			if secondTileMapToDraw ~= nil then 
 				assert(secondTileMapPlacement ~= nil)	
-				currentTileSetBatch:add(currentTileMapQuads[secondTileMapToDraw[y][x] ], ((x-1) * tileSize) + xOffset, ((y-1) * tileSize) + yOffset)
+				currentTileSetBatch:add(currentTileMapQuads[secondTileMapToDraw[y][x] ], ((x-1) * globalTileSize) + xOffset, ((y-1) * globalTileSize) + yOffset)
 			end
 		end
 	end
-	--[[
-	if secondTileMapToDraw ~= nil then 
-		assert(secondTileMapPlacement ~= nil)
-		for y=1,tilesDisplayHeight do
-			for x=1, tilesDisplayWidth do 			
-				currentTileSetBatch:add(currentTileMapQuads[tileMapToDraw[y][x] ], ((x-1) * tileSize) + xOffset, ((y-1) * tileSize) + yOffset)			
-			end
-		end
-	end
-	currentTileSetBatch:flush()]]
 end
 
 function drawTileSetBatch(screenShiftX, screenShiftY)
 	love.graphics.draw(currentTileSetBatch, screenShiftX, screenShiftY)
+	
+	if gameState == GameStates.neutral then 
+		for i=1, #world[prevWorldY][prevWorldX].enemies do 
+			world[prevWorldY][prevWorldX].enemies[i]:draw(dt)
+		end
+	end
+	
+	
 end

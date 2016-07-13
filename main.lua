@@ -7,6 +7,8 @@ require "player"
 require "game" 
 require "queue"
 require "ui"
+require "collision"
+require "enemyManager"
 
 -- this is the actual physical window size 
 screenWidth = nil
@@ -27,6 +29,22 @@ baseScreenHeight = 144
 -- player map switching is messy. 
 -- the way it's setup you can see the player in their last position for 1 frame 
 -- it's setup cheaply and it's not great, but it works 
+-- maybe the whole thing should be shifted using love.graphics.translate ?
+
+-- NOTE:
+-- tilemaps within the world will need to be changed to an object
+-- this way they can keep info like...
+-- enemies
+-- chests
+-- interactable objects and their states
+-- multiple layers / height
+
+-- NOTE: 
+-- should make a generic spritebatch loop. can't have one for map, but everything else should be generic enough
+-- also, think about making a spritebatching class
+
+-- NOTE:
+-- should maybe seperate the map into a collision layer and tile layer
 
 -- will need to implement a z coordinate for going up / down 
 -- if you go into a house, how will that work 
@@ -36,6 +54,8 @@ baseScreenHeight = 144
 
 directions = {up = "up", down = "down", left = "left", right = "right"}
 local scaleValue = 4
+globalTileSize = 16
+
 
 function love.load(arg)
 	--for i=1,#arg do print(arg[i]) end
