@@ -45,9 +45,7 @@ a note on equality ...
 -- does it exist on another z plane. does it exist on it's own z plane 
 -- same idea for caves and dungeons 
 
-
 directions = {up = "up", down = "down", left = "left", right = "right"}
-
 
 local scaleValue = 4
 

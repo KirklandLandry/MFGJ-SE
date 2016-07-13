@@ -36,7 +36,7 @@ end]]
 
 function updatePlayer(dt)
 	
-	local impulse = 60
+	local impulse = 40
 
 	player.vel.x = 0
 	player.vel.y = 0

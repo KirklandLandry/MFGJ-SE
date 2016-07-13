@@ -211,6 +211,7 @@ function checkTileMapCollision(box, playerMapX, playerMapY)
 	
 		
 	-- now check for collisions with the tiles on the tilemap
+	-- checks a 3x3 space centred around the player
 	local currentWorldTileMap = world[worldY][worldX]
 	for y = yMin, yMin + 2 do 
 		for x = xMin, xMin + 2 do 
