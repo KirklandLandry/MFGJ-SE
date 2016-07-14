@@ -9,6 +9,22 @@
 
 -- have a state for things
 -- menu state or game state or cutscene state. something like that
+directions = {up = "up", down = "down", left = "left", right = "right"}
+ function getRandomDirection()
+	local r = math.random(1,100)
+	print(r)
+	local result = directions.up 
+	if r <=25 then 
+		result = directions.up 
+	elseif r <=50 then 
+		result = directions.down 
+	elseif r <= 75 then 
+		result = directions.left
+	elseif r <= 100 then 
+		result = directions.right
+	end
+	return result 
+ end
 
 GameStates = {scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight", neutral = "neutral", scrollComplete = "scrollComplete"}
 gameState = nil 
@@ -75,7 +91,7 @@ function updateScreenShift(dt)
 	if math.abs(screenShiftX) >= baseScreenWidth then 
 		screenShiftX = 0
 		gameState = GameStates.scrollComplete		
-	elseif math.abs(screenShiftY) >= baseScreenHeight - 16 then -- 16 is the tile size THIS SHOULD BE MOVED FROM MAP TO BE GLOBAL
+	elseif math.abs(screenShiftY) >= baseScreenHeight - globalTileSize then
 		screenShiftY = 0
 		gameState = GameStates.scrollComplete
 		

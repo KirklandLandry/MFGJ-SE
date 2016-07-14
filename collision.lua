@@ -9,12 +9,11 @@ function AABBvsTileMapCoords(a, x1,y1,x2,y2)
 end
 
 function AABBvsAABB(a, b)
-	assert(1==0, "this hasn't actually been properly tested, so this is just a warning. remove once you see this")
 	-- Exit with no intersection if found separated along an axis
 	if(a.maxVec.x < b.minVec.x or a.minVec.x > b.maxVec.x) then return false end
 	-- tile collider y is the bottom 30% of a sprite (70% of the sprite offset from the minvec.y) 
 	-- this gives the appearance of 3D viewing as it let's you overlap vertically
-	if(a.maxVec.y < b:getTileColliderY() or a:getTileColliderY() > b.maxVec.y) then return false end
+	if(a.maxVec.y < b.minVec.y or a.minVec.y > b.maxVec.y) then return false end
 	-- No separating axis found, therefore there is at least one overlapping axis
 	return true
 end
@@ -33,3 +32,27 @@ function AABBvsScreenEdge(a)
 	return result
 end
 
+
+
+--[[function correctAABBvsAABB(a,b)	
+	
+	local result = Vector:new(0,0)
+	
+	-- a is to the left of b 
+	if a.maxVec.x > b.minVec.x and a.minVec.x < b.minVec.x then 
+		result.x = a.maxVec.x - b.minVec.x 
+	-- a is to the right of b 
+	elseif a.minVec.x < b.maxVec.x and a.maxVec.x > b.maxVec.x then 
+		result.x = a.minVec.x - b.maxVec.x
+	end	
+	
+	-- a is below b 
+	if a.maxVec.y > b.minVec.y and a.minVec.y < b.minVec.y then 
+		result.y = a.maxVec.y - b.minVec.y
+	-- a is above b 
+	elseif a.minVec.y < b.maxVec.y and a.maxVec.y > b.maxVec.y then 
+		result.y = a.minVec.y - b.maxVec.y
+	end	
+	print(result.x, result.y)
+	return result 
+end]]

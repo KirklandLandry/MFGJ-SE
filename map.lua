@@ -19,7 +19,7 @@ local filledTile = 2
 
 
 function generateTileMap(mapObject)
-	local result = {base = {}, enemies = {SimpleEnemy:new(math.random(32,90),math.random(32,90),16,16)}}
+	local result = {base = {}, enemies = {SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)}}
 	for y = 1, tilesDisplayHeight do 
 		result.base[y] = {}
 		for x = 1, tilesDisplayWidth do 
@@ -53,6 +53,7 @@ end
 function convertGridToTilemapWorld()
 	
 end
+
 
 
 function generateWorld()
@@ -189,7 +190,6 @@ function checkTileMapCollision(box, tileX, tileY)
 		yMin = tileY - 1 
 	end
 	
-	
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
 	local currentWorldTileMap = world[worldY][worldX].base
@@ -204,6 +204,71 @@ function checkTileMapCollision(box, tileX, tileY)
 		end	
 	end	
 	return false
+end
+
+function playerVsEnemiesCollisions(playerAABB, playerVelocityVector)
+	local result = {normal = Vector:new(0,0), penetration = 0}
+
+	for i=1, #world[prevWorldY][prevWorldX].enemies do 	
+		local enemyAABB = world[prevWorldY][prevWorldX].enemies[i]:getAABB()
+		--if AABBvsAABB(playerAABB, world[prevWorldY][prevWorldX].enemies[i]:getAABB()) then 
+			--local correctionVector = correctAABBvsAABB(playerAABB, world[prevWorldY][prevWorldX].enemies[i]:getAABB())
+			local n = Vector:new(enemyAABB.minVec.x - playerAABB.minVec.x, enemyAABB.minVec.y - playerAABB.minVec.y)
+			
+			local playerExtentX = (playerAABB.maxVec.x - playerAABB.minVec.x) / 2 
+			local enemyExtentX =  (enemyAABB.maxVec.x - enemyAABB.minVec.x) / 2 
+			
+			local xOverlap = playerExtentX + enemyExtentX - math.abs(n.x)
+			-- SAT test on x
+			if xOverlap > 0 then 
+				local playerExtentY = (playerAABB.maxVec.y - playerAABB.minVec.y) / 2 
+				local enemyExtentY =  (enemyAABB.maxVec.y - enemyAABB.minVec.y) / 2 
+				
+				local yOverlap = playerExtentY + enemyExtentY - math.abs(n.y)
+				
+				--[[print("n")
+				print(n.x, n.y)
+				print("x extents")
+				print(playerExtentX, enemyExtentX)
+				print("y extents")
+				print(playerExtentY, enemyExtentY)
+				print("overlaps")
+				print(xOverlap, yOverlap)]]
+				
+				-- SAT test on y
+				if yOverlap > 0 then 
+					-- which is the axis of least penetration
+					if xOverlap < yOverlap then 
+--print("x")					
+						if n.x < 0 then 
+							result.normal.x = -1  
+							result.normal.y =  0
+						else
+							result.normal.x = 1 
+							result.normal.y = 0 
+						end
+						result.penetration = xOverlap
+						return result 
+					else 
+					--print("y")
+						if n.y < 0 then 
+							result.normal.x =  0
+							result.normal.y = -1
+						else
+							result.normal.x = 0
+							result.normal.y = 1
+						end
+						result.penetration = yOverlap
+						assert(1==0)
+						return result 
+					end
+				end
+			end
+			
+			--return  
+		--end
+	end
+	return nil
 end
 
 function getTileCoordinate(x, y)

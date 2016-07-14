@@ -20,6 +20,14 @@ baseScreenWidth = 160
 baseScreenHeight = 144
 
 -- NOTE: 
+-- the structure of stuff has become somewhat wonky 
+-- player should be an object that gets created which lets it be handled more easily
+-- it's getting kind of weird with bits of collision in map and also in player
+-- also, map handles a lot right now, not just being a map 
+-- it also handles most of the collision stuff and world stuff (enemies/map)
+
+
+-- NOTE: 
 -- need to change how tilemap switching works
 -- when you move right, detect the change based on the player min x 
 -- when you move left, detect the change based on the player max x 
@@ -52,13 +60,17 @@ baseScreenHeight = 144
 -- does it exist on another z plane. does it exist on it's own z plane 
 -- same idea for caves and dungeons 
 
-directions = {up = "up", down = "down", left = "left", right = "right"}
 local scaleValue = 4
 globalTileSize = 16
 
 
 function love.load(arg)
 	--for i=1,#arg do print(arg[i]) end
+	math.randomseed(os.time())
+	math.random()
+	math.random()
+	
+	
 	local success = love.window.setMode(baseScreenWidth * scaleValue, baseScreenHeight * scaleValue)
 	if not success then error("failed to set window size") end 
 	
@@ -83,7 +95,7 @@ function love.draw()
 end
 
 -------------- additional math functions --------------
-function math.getSign(x)
+function math.sign(x)
 	if x < 0 then
  		return -1
 	elseif x > 0 then

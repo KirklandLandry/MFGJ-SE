@@ -17,6 +17,10 @@ function SimpleEnemy:new(x, y, width, height)
 	return o
 end
  
+ function SimpleEnemy:getAABB()
+	return self.box
+ end
+ 
  function SimpleEnemy:update(dt)
 	assert(dt~=nil, "don't pass an empty dt, dummy")
 	
@@ -41,20 +45,32 @@ end
 -- wait 1 second 
 -- move in a direction for 2 seconds
 -- repeat
+local moveAmount = 10
 function SimpleEnemy:move(dt)
+	self.vel.x = 0 
+	self.vel.y = 0
 	if self.state == EnemyState.moving then 
-		self.vel.x = (10 * dt)--self.vel.x + (10 * dt)
+		if self.facingDirection == directions.up  then 
+			self.vel.y = -(moveAmount * dt)
+		elseif self.facingDirection == directions.down  then 
+			self.vel.y = (moveAmount * dt)
+		elseif self.facingDirection == directions.left then 
+			self.vel.x = -(moveAmount * dt)
+		elseif self.facingDirection == directions.right then 
+			self.vel.x = (moveAmount * dt)
+		end
 		self.box:scalarMove(self.vel.x, self.vel.y)
 	end
 end
 
 function SimpleEnemy:updateTimer(dt)
-
 	self.timerValue = self.timerValue + dt 
 	if self.timerValue > self.timerMax then 
 	
 		self.timerValue = 0 
-		if self.state == EnemyState.waiting then self.state = EnemyState.moving
+		if self.state == EnemyState.waiting then 
+			self.state = EnemyState.moving
+			self.facingDirection = getRandomDirection()
 		elseif self.state == EnemyState.moving then self.state = EnemyState.waiting end
 	end
 end
