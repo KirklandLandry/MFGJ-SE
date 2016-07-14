@@ -1,6 +1,6 @@
 local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible"}
 
-local player = {box = AABB:new(110, 60, 12, globalTileSize), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil, moveState = PlayerStates.neutral}
+local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil, moveState = PlayerStates.neutral}
 
 local playerQuads = nil
 local playerTileset = nil
@@ -24,7 +24,7 @@ end
 local animationIndex = 1
 
 local timerValue = 0
-local timerMax = 0.17
+local timerMax = 0.14
 function updatePlayerTimer(dt)
 	timerValue = timerValue + dt 
 	if timerValue > timerMax then 
@@ -37,7 +37,7 @@ end
 
 -- this needs to be calculated
 -- give him an inivincibility / health state seperate from recoil (movestate)
-local recoilAmount = 60
+local recoilAmount = 70
 local recoilX = 10 
 local recoilY = 10
 function updatePlayer(dt)
@@ -70,7 +70,7 @@ function updatePlayer(dt)
 			animationIndex = 3
 		end
 		
-		-- debug 
+		-- debug change health 
 		if getKeyPress("q") then player.currentHealth = player.currentHealth - 0.25 end 
 		if getKeyPress("e") then player.currentHealth = player.currentHealth + 0.25 end 	
 
@@ -79,12 +79,12 @@ function updatePlayer(dt)
 	end
 	
 	
-	local collisionInfo = playerVsEnemiesCollisions(player.box, player.vel)
+	local collisionInfo = playerVsEnemiesCollisions(player.box)
 	-- check for collisions with enemies on the current tilemap
 	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil then 
 		
 		-- draw a recoil animation
-		player.box:vectorMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.x * collisionInfo.penetration)
+		player.box:scalarMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.y * collisionInfo.penetration)
 		
 		player.moveState = PlayerStates.recoil
 		
@@ -121,6 +121,8 @@ function drawPlayer(screenShiftX, screenShiftY)
 	elseif gameState == GameStates.scrollingDown then 
 		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, baseScreenHeight - globalTileSize + screenShiftY)	
 	end
+	
+	player.box:drawCorners()
 end
 
 

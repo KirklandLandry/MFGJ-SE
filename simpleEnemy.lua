@@ -38,7 +38,9 @@ end
 end
  
 function SimpleEnemy:draw()
+love.graphics.setColor(99,165,33)
 	love.graphics.rectangle("fill", self.box.minVec.x, self.box.minVec.y, self.box.width, self.box.height)
+	self.box:drawCorners()
 end
 
 -- do something simple to start

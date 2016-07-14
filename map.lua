@@ -206,67 +206,50 @@ function checkTileMapCollision(box, tileX, tileY)
 	return false
 end
 
-function playerVsEnemiesCollisions(playerAABB, playerVelocityVector)
+function playerVsEnemiesCollisions(playerAABB)
 	local result = {normal = Vector:new(0,0), penetration = 0}
-
-	for i=1, #world[prevWorldY][prevWorldX].enemies do 	
-		local enemyAABB = world[prevWorldY][prevWorldX].enemies[i]:getAABB()
-		--if AABBvsAABB(playerAABB, world[prevWorldY][prevWorldX].enemies[i]:getAABB()) then 
-			--local correctionVector = correctAABBvsAABB(playerAABB, world[prevWorldY][prevWorldX].enemies[i]:getAABB())
-			local n = Vector:new(enemyAABB.minVec.x - playerAABB.minVec.x, enemyAABB.minVec.y - playerAABB.minVec.y)
-			
-			local playerExtentX = (playerAABB.maxVec.x - playerAABB.minVec.x) / 2 
-			local enemyExtentX =  (enemyAABB.maxVec.x - enemyAABB.minVec.x) / 2 
-			
-			local xOverlap = playerExtentX + enemyExtentX - math.abs(n.x)
-			-- SAT test on x
-			if xOverlap > 0 then 
-				local playerExtentY = (playerAABB.maxVec.y - playerAABB.minVec.y) / 2 
-				local enemyExtentY =  (enemyAABB.maxVec.y - enemyAABB.minVec.y) / 2 
-				
-				local yOverlap = playerExtentY + enemyExtentY - math.abs(n.y)
-				
-				--[[print("n")
-				print(n.x, n.y)
-				print("x extents")
-				print(playerExtentX, enemyExtentX)
-				print("y extents")
-				print(playerExtentY, enemyExtentY)
-				print("overlaps")
-				print(xOverlap, yOverlap)]]
-				
-				-- SAT test on y
-				if yOverlap > 0 then 
-					-- which is the axis of least penetration
-					if xOverlap < yOverlap then 
---print("x")					
-						if n.x < 0 then 
-							result.normal.x = -1  
-							result.normal.y =  0
-						else
-							result.normal.x = 1 
-							result.normal.y = 0 
-						end
-						result.penetration = xOverlap
-						return result 
-					else 
-					--print("y")
-						if n.y < 0 then 
-							result.normal.x =  0
-							result.normal.y = -1
-						else
-							result.normal.x = 0
-							result.normal.y = 1
-						end
-						result.penetration = yOverlap
-						assert(1==0)
-						return result 
+	for i=1, #world[worldY][worldX].enemies do 	
+		local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()	
+		-- remember to measure from the centre to make it work properly 
+		-- it'll look like it works if the widths are the same, but diff width will throw everything off
+		local n = Vector:new((enemyAABB.minVec.x + enemyAABB.width/2) - (playerAABB.minVec.x + playerAABB.width/2), 
+							 (enemyAABB.minVec.y + enemyAABB.height/2) - (playerAABB.minVec.y + playerAABB.height/2))
+							 
+		local playerExtentX = playerAABB.width / 2 
+		local enemyExtentX =  enemyAABB.width  / 2 
+		local xOverlap = playerExtentX + enemyExtentX - math.abs(n.x)
+		-- SAT test on x
+		if xOverlap > 0 then 
+			local playerExtentY = playerAABB.height / 2 
+			local enemyExtentY =  enemyAABB.height  / 2 
+			local yOverlap = playerExtentY + enemyExtentY - math.abs(n.y)		
+			-- SAT test on y
+			if yOverlap > 0 then 
+				-- which is the axis of least penetration
+				if xOverlap < yOverlap then 
+					if n.x < 0 then 
+						result.normal.x = 1  
+						result.normal.y =  0
+					else
+						result.normal.x = -1 
+						result.normal.y = 0 
 					end
+					result.penetration = xOverlap
+					return result 
+				else 
+					if n.y < 0 then 
+						result.normal.x =  0
+						result.normal.y = 1
+					else
+						result.normal.x = 0
+						result.normal.y = -1
+					end
+					result.penetration = yOverlap
+
+					return result 
 				end
 			end
-			
-			--return  
-		--end
+		end
 	end
 	return nil
 end
@@ -278,6 +261,7 @@ function getTileCoordinate(x, y)
 end
 
 function updateMap(dt)
+	-- debug. remove later
 	if getKeyPress("a") then worldX = worldX - 1 end 
 	if getKeyPress("d") then worldX = worldX + 1 end 
 	if getKeyPress("w") then worldY = worldY - 1 end 

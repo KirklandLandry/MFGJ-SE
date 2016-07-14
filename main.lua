@@ -26,7 +26,6 @@ baseScreenHeight = 144
 -- also, map handles a lot right now, not just being a map 
 -- it also handles most of the collision stuff and world stuff (enemies/map)
 
-
 -- NOTE: 
 -- need to change how tilemap switching works
 -- when you move right, detect the change based on the player min x 

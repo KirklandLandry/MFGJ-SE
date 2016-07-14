@@ -5,7 +5,7 @@ function AABB:new(x, y, width, height)
 	setmetatable(o, self)
 	self.__index = self
 	o.minVec = Vector:new(x, y)
-	o.maxVec = Vector:new(x+width, y+height)
+	o.maxVec = Vector:new(x + width, y + height)
 	o.width = width
 	o.height = height
 	shape = "AABB"
@@ -34,4 +34,15 @@ end
 -- for collisions using the bottom 30% of the sprite
 function AABB:getTileColliderY()
 	return (self.minVec.y + (self.width * 0.70))
+end
+
+function AABB:drawCorners()
+	love.graphics.setColor(255,0,0)
+	love.graphics.rectangle("line", self.minVec.x, self.minVec.y, self.width, self.height)
+	love.graphics.setColor(0,222,0)
+	love.graphics.circle("fill", self.minVec.x, self.minVec.y, 1,32)
+	love.graphics.circle("fill", self.maxVec.x, self.minVec.y, 1,32)
+	love.graphics.circle("fill", self.minVec.x, self.maxVec.y, 1,32)
+	love.graphics.circle("fill", self.maxVec.x, self.maxVec.y, 1,32)
+	love.graphics.setColor(255,255,255)
 end
