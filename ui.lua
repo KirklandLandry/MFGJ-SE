@@ -28,12 +28,13 @@ function loadHeartContainerTilebatch(playerHeartContainers, playerHealth)
 	heartContainerTilesetImage = love.graphics.newImage("assets/tilesets/heartTileset.png")
 	heartContainerTilesetImage:setFilter("nearest", "nearest")
 	
+	local halfTileSize = globalTileSize/2
+	
 	heartContainerTilesetQuads = {}
-	heartContainerTilesetQuads[1] = love.graphics.newQuad(0,0,8, 8, heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
-	heartContainerTilesetQuads[2] = love.graphics.newQuad(8*1,0,8, 8, heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
-	heartContainerTilesetQuads[3] = love.graphics.newQuad(8*2,0,8, 8, heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
-	heartContainerTilesetQuads[4] = love.graphics.newQuad(8*3,0,8, 8, heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
-	heartContainerTilesetQuads[5] = love.graphics.newQuad(8*4,0,8, 8, heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
+	for i=1,5 do 
+		heartContainerTilesetQuads[i] = love.graphics.newQuad((i-1)*halfTileSize,0, halfTileSize, halfTileSize, 
+										heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
+	end
 	
 	heartContainerTilesetBatch = love.graphics.newSpriteBatch(heartContainerTilesetImage, currentHeartContainerCount)
 	updateHeartContainerTilebatch()

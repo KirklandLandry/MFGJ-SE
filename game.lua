@@ -65,14 +65,14 @@ function updateGame(dt)
 	end
 end
 
-
 function drawGame()
 	drawTileSetBatch(screenShiftX, screenShiftY)
 	drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
 end 
 
-
+-- idea for shifting the player
+-- to draw the player just draw them at the shift x and shift y 
 function updateScreenShift(dt)
 	if gameState == GameStates.scrollingUp then 
 		screenShiftY = screenShiftY + (screenShiftAmount * dt)
@@ -93,8 +93,6 @@ function updateScreenShift(dt)
 		gameState = GameStates.scrollComplete		
 	elseif math.abs(screenShiftY) >= baseScreenHeight - globalTileSize then
 		screenShiftY = 0
-		gameState = GameStates.scrollComplete
-		
+		gameState = GameStates.scrollComplete	
 	end
-	
 end

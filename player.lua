@@ -1,10 +1,9 @@
-local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible"}
+local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth"}
 
-local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil, moveState = PlayerStates.neutral}
+local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral}
 
 local playerQuads = nil
 local playerTileset = nil
-
 
 function loadPlayer() 
 	player.facingDirection = directions.down
@@ -35,12 +34,27 @@ function updatePlayerTimer(dt)
 	end
 end
 
+local invincibilityTimerValue = 0
+local invincibilityTimerMax = 1
+function updateInvincibilityTimer(dt)
+	invincibilityTimerValue = invincibilityTimerValue + dt 
+	if invincibilityTimerValue > invincibilityTimerMax then 
+		invincibilityTimerValue = 0 
+		player.bodyState = PlayerStates.neutral
+	end
+end
+
+
 -- this needs to be calculated
 -- give him an inivincibility / health state seperate from recoil (movestate)
 local recoilAmount = 70
 local recoilX = 10 
 local recoilY = 10
 function updatePlayer(dt)
+	
+	if player.bodyState == PlayerStates.invincible then 
+		updateInvincibilityTimer(dt)
+	end
 	
 	if player.moveState == PlayerStates.recoil then 
 		updatePlayerTimer(dt)
@@ -81,12 +95,13 @@ function updatePlayer(dt)
 	
 	local collisionInfo = playerVsEnemiesCollisions(player.box)
 	-- check for collisions with enemies on the current tilemap
-	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil then 
+	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil and player.bodyState ~= PlayerStates.invincible then 
 		
 		-- draw a recoil animation
 		player.box:scalarMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.y * collisionInfo.penetration)
 		
 		player.moveState = PlayerStates.recoil
+		player.bodyState = PlayerStates.invincible
 		
 		recoilX = collisionInfo.normal.x * recoilAmount
 		recoilY = collisionInfo.normal.y * recoilAmount
@@ -103,10 +118,18 @@ function updatePlayer(dt)
 	
 	-- check for collisions against the tilemap 
 	if (checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
+	--[[local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
+	if tilemapCorrectionInfo ~= nil then 
+		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+	end]]
 end
 
-
 function drawPlayer(screenShiftX, screenShiftY)
+
+	if player.bodyState == PlayerStates.invincible then 
+		love.graphics.setColor(200,200,200,170)
+	end
+
 	if gameState == GameStates.neutral or 
 	math.floor(screenShiftX) == math.floor(player.box.minVec.x) or 
 	math.floor(screenShiftY) == math.floor(player.box.minVec.y) then
@@ -121,10 +144,9 @@ function drawPlayer(screenShiftX, screenShiftY)
 	elseif gameState == GameStates.scrollingDown then 
 		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, baseScreenHeight - globalTileSize + screenShiftY)	
 	end
-	
+	love.graphics.setColor(255,255,255)
 	player.box:drawCorners()
 end
-
 
 function getPlayerHealth()
 	return player.currentHealth

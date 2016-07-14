@@ -68,7 +68,6 @@ end
 function SimpleEnemy:updateTimer(dt)
 	self.timerValue = self.timerValue + dt 
 	if self.timerValue > self.timerMax then 
-	
 		self.timerValue = 0 
 		if self.state == EnemyState.waiting then 
 			self.state = EnemyState.moving

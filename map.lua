@@ -19,7 +19,12 @@ local filledTile = 2
 
 
 function generateTileMap(mapObject)
-	local result = {base = {}, enemies = {SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)}}
+	local result = {base = {}, enemies = {}}
+	
+	for i=1,4 do 
+		result.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
+	end
+	
 	for y = 1, tilesDisplayHeight do 
 		result.base[y] = {}
 		for x = 1, tilesDisplayWidth do 
@@ -152,7 +157,6 @@ end
 
 function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)	
 	local result = Vector:new(0,0)
-	
 	-- first check if they moved to a different tilemap on the world map
 	if playerMapX < 1 and worldX -1 > 0 then 
 		result.x = tilesDisplayWidth * globalTileSize
@@ -168,7 +172,6 @@ function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)
 		result.y = -tilesDisplayHeight * globalTileSize
 		worldY = worldY + 1
 	end
-	
 	return (result)
 end
 
@@ -204,54 +207,34 @@ function checkTileMapCollision(box, tileX, tileY)
 		end	
 	end	
 	return false
-end
-
-function playerVsEnemiesCollisions(playerAABB)
-	local result = {normal = Vector:new(0,0), penetration = 0}
-	for i=1, #world[worldY][worldX].enemies do 	
-		local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()	
-		-- remember to measure from the centre to make it work properly 
-		-- it'll look like it works if the widths are the same, but diff width will throw everything off
-		local n = Vector:new((enemyAABB.minVec.x + enemyAABB.width/2) - (playerAABB.minVec.x + playerAABB.width/2), 
-							 (enemyAABB.minVec.y + enemyAABB.height/2) - (playerAABB.minVec.y + playerAABB.height/2))
-							 
-		local playerExtentX = playerAABB.width / 2 
-		local enemyExtentX =  enemyAABB.width  / 2 
-		local xOverlap = playerExtentX + enemyExtentX - math.abs(n.x)
-		-- SAT test on x
-		if xOverlap > 0 then 
-			local playerExtentY = playerAABB.height / 2 
-			local enemyExtentY =  enemyAABB.height  / 2 
-			local yOverlap = playerExtentY + enemyExtentY - math.abs(n.y)		
-			-- SAT test on y
-			if yOverlap > 0 then 
-				-- which is the axis of least penetration
-				if xOverlap < yOverlap then 
-					if n.x < 0 then 
-						result.normal.x = 1  
-						result.normal.y =  0
-					else
-						result.normal.x = -1 
-						result.normal.y = 0 
-					end
-					result.penetration = xOverlap
-					return result 
-				else 
-					if n.y < 0 then 
-						result.normal.x =  0
-						result.normal.y = 1
-					else
-						result.normal.x = 0
-						result.normal.y = -1
-					end
-					result.penetration = yOverlap
-
+	
+	--[[local result = nil 
+	-- now check for collisions with the tiles on the tilemap
+	-- checks a 3x3 space centred around the player
+	local currentWorldTileMap = world[worldY][worldX].base
+	for y = yMin, yMin + 2 do 
+		for x = xMin, xMin + 2 do 
+			if currentWorldTileMap[y][x] == 2 then		
+				result = AABBvsTileDetectionAndResolution(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+				if result ~= nil then 
 					return result 
 				end
 			end
-		end
+		end	
+	end	
+	return result ]]
+end
+
+function playerVsEnemiesCollisions(playerAABB)
+	local result = nil 
+	for i=1, #world[worldY][worldX].enemies do 	
+		local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
+		result = AABBvsAABBDetectionAndResolution(playerAABB, enemyAABB)	
+		if result ~= nil then 
+			return result 
+		end 
 	end
-	return nil
+	return result
 end
 
 function getTileCoordinate(x, y)
@@ -271,7 +254,6 @@ function updateMap(dt)
 	if worldY < 1 then worldY = 1 end 
 	if worldX > tilesDisplayWidth then worldX = tilesDisplayWidth end 
 	if worldY > tilesDisplayHeight then worldY = tilesDisplayHeight end 
-
 
 	if gameState == GameStates.scrollComplete then 
 		print("map scroll complete")

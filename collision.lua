@@ -33,26 +33,98 @@ function AABBvsScreenEdge(a)
 end
 
 
+function AABBvsAABBDetectionAndResolution(a, b)	
+	local result = {normal = Vector:new(0,0), penetration = 0}
 
---[[function correctAABBvsAABB(a,b)	
-	
-	local result = Vector:new(0,0)
-	
-	-- a is to the left of b 
-	if a.maxVec.x > b.minVec.x and a.minVec.x < b.minVec.x then 
-		result.x = a.maxVec.x - b.minVec.x 
-	-- a is to the right of b 
-	elseif a.minVec.x < b.maxVec.x and a.maxVec.x > b.maxVec.x then 
-		result.x = a.minVec.x - b.maxVec.x
-	end	
-	
-	-- a is below b 
-	if a.maxVec.y > b.minVec.y and a.minVec.y < b.minVec.y then 
-		result.y = a.maxVec.y - b.minVec.y
-	-- a is above b 
-	elseif a.minVec.y < b.maxVec.y and a.maxVec.y > b.maxVec.y then 
-		result.y = a.minVec.y - b.maxVec.y
-	end	
-	print(result.x, result.y)
-	return result 
-end]]
+	-- remember to measure from the centre to make it work properly 
+	-- it'll look like it works if the widths are the same, but diff width will throw everything off
+	local n = Vector:new((b.minVec.x + b.width/2) - (a.minVec.x + a.width/2), (b.minVec.y + b.height/2) - (a.minVec.y + a.height/2))
+						
+	local aExtentX = a.width / 2 
+	local bExtentX =  b.width  / 2 
+	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
+	-- SAT test on x
+	if xOverlap > 0 then 
+		local aExtentY = a.height / 2 
+		local bExtentY =  b.height  / 2 
+		local yOverlap = aExtentY + bExtentY - math.abs(n.y)		
+		-- SAT test on y
+		if yOverlap > 0 then 
+			-- which is the axis of least penetration
+			if xOverlap < yOverlap then 
+				if n.x < 0 then 
+					result.normal.x = 1  
+					result.normal.y =  0
+				else
+					result.normal.x = -1 
+					result.normal.y = 0 
+				end
+				result.penetration = xOverlap
+				return result 
+			else 
+				if n.y < 0 then 
+					result.normal.x =  0
+					result.normal.y = 1
+				else
+					result.normal.x = 0
+					result.normal.y = -1
+				end
+				result.penetration = yOverlap
+
+				return result 
+			end
+		end
+	end
+	return nil 
+end
+
+
+
+-- this isn't fully tested and the getTileColliderY presents a problem
+-- it's fine for vertical movement but left right will cause a gap
+-- might need multiple n's, need to think it through
+function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
+	local result = {normal = Vector:new(0,0), penetration = 0}
+
+	-- remember to measure from the centre to make it work properly 
+	-- it'll look like it works if the widths are the same, but diff width will throw everything off
+	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + a.height/2))
+						
+	local aExtentX = a.width / 2 
+	local bExtentX = bw / 2 
+	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
+	-- SAT test on x
+	if xOverlap > 0 then 
+		local aExtentY = a.height / 2 
+		local bExtentY = bh / 2 
+		local yOverlap = aExtentY + bExtentY - math.abs(n.y)		
+		-- SAT test on y
+		if yOverlap > 0 then 
+			-- which is the axis of least penetration
+			if xOverlap < yOverlap then 
+				if n.x < 0 then 
+					result.normal.x = 1  
+					result.normal.y =  0
+				else
+					result.normal.x = -1 
+					result.normal.y = 0 
+				end
+				result.penetration = xOverlap
+				return result 
+			else 
+				if n.y < 0 then 
+					result.normal.x =  0
+					result.normal.y = 1
+				else
+					result.normal.x = 0
+					result.normal.y = -1
+				end
+				result.penetration = yOverlap
+
+				return result 
+			end
+		end
+	end
+	return nil 
+end
+

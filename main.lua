@@ -19,6 +19,11 @@ screenHeight = nil
 baseScreenWidth = 160
 baseScreenHeight = 144
 
+-- the game draws at 160x144 and is scaled up by scalevalue
+local scaleValue = 4
+-- default tile sizes are 16x16
+globalTileSize = 16
+
 -- NOTE: 
 -- the structure of stuff has become somewhat wonky 
 -- player should be an object that gets created which lets it be handled more easily
@@ -38,29 +43,35 @@ baseScreenHeight = 144
 -- it's setup cheaply and it's not great, but it works 
 -- maybe the whole thing should be shifted using love.graphics.translate ?
 
+-- WARNING:
+-- need to switch up how tilemap collision works 
+-- right now it's just simple reverse the amount moved 
+-- the problem with this is if an enemy bumps you into a wall then you're stuck
+-- need to do a proper detection and resolution
+
 -- NOTE:
--- tilemaps within the world will need to be changed to an object
--- this way they can keep info like...
+-- tilemaps object should keep info like...
 -- enemies
 -- chests
 -- interactable objects and their states
 -- multiple layers / height
 
+-- NOTE:
+-- should maybe seperate the map into a collision layer and tile layer
+
 -- NOTE: 
 -- should make a generic spritebatch loop. can't have one for map, but everything else should be generic enough
 -- also, think about making a spritebatching class
 
--- NOTE:
--- should maybe seperate the map into a collision layer and tile layer
+-- NOTE: 
+-- should also make a generic timer object 
 
+-- NOTE: 
 -- will need to implement a z coordinate for going up / down 
 -- if you go into a house, how will that work 
 -- is that a seperate world 
 -- does it exist on another z plane. does it exist on it's own z plane 
 -- same idea for caves and dungeons 
-
-local scaleValue = 4
-globalTileSize = 16
 
 
 function love.load(arg)
@@ -68,7 +79,6 @@ function love.load(arg)
 	math.randomseed(os.time())
 	math.random()
 	math.random()
-	
 	
 	local success = love.window.setMode(baseScreenWidth * scaleValue, baseScreenHeight * scaleValue)
 	if not success then error("failed to set window size") end 
@@ -103,7 +113,6 @@ function math.sign(x)
 		return 0
 	end
 end
-
 function math.round(num, idp)
 	local mult = 10^(idp or 0)
 	return math.floor(num * mult + 0.5) / mult
