@@ -10,6 +10,7 @@ require "ui"
 require "collision"
 require "enemyManager"
 require "timer"
+require "attack"
 
 -- this is the actual physical window size 
 screenWidth = nil
@@ -24,6 +25,15 @@ baseScreenHeight = 144
 local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
+
+
+-- NOTE:
+-- could enemy and player be collapsed into 1 base type? 
+-- most of it is fairly similar and it would make all of the code more generic and 
+-- make it easier to work with. Something to consider before things go too far.
+
+-- NOTE: 
+-- get enemy bounceback working
 
 -- NOTE: 
 -- the structure of stuff has become somewhat wonky 
@@ -69,9 +79,6 @@ globalTileSize = 16
 -- NOTE: 
 -- should make a generic spritebatch loop. can't have one for map, but everything else should be generic enough
 -- also, think about making a spritebatching class
-
--- NOTE: 
--- should also make a generic timer object 
 
 -- NOTE: 
 -- will need to implement a z coordinate for going up / down 

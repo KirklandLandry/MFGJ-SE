@@ -253,14 +253,25 @@ function updateMap(dt)
 	for i=length,1,-1  do 
 		world[prevWorldY][prevWorldX].enemies[i]:update(dt)
 		
-		local playerAttack = getPlayerAttackAABB()
-		if playerAttack ~= nil then 
-			
-			local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
-			local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack)	
-			
-			if collisionResult ~= nil then 
-				table.remove(world[prevWorldY][prevWorldX].enemies, i)
+		if not world[prevWorldY][prevWorldX].enemies[i]:isInvincible() then 
+			-- should be getting a list once the playerattack is changed to a list 
+			-- of currently active player attacks
+			local playerAttack = getPlayerAttack()
+			if playerAttack ~= nil then 
+				
+				local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
+				local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack.box)	
+				
+				if collisionResult ~= nil then 
+					-- make a variant object called attack or something that's and AABB and 
+					-- also contains damage and element info and stuff like that.
+					world[worldY][worldX].enemies[i]:changeHealth(-playerAttack.damage)
+					world[worldY][worldX].enemies[i].invincibilityFrames = playerAttack:remainingFrames()
+					
+					if world[worldY][worldX].enemies[i]:getHealth() <= 0 then 
+						table.remove(world[prevWorldY][prevWorldX].enemies, i)
+					end
+				end
 			end
 		end
 	end

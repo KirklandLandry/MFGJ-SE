@@ -2,7 +2,7 @@ local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral
 
 local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, 
 				facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral, 
-				invincibilityTimer = nil, recoilTimer = nil}
+				invincibilityTimer = nil, recoilTimer = nil, attack = nil }
 
 local playerQuads = nil
 local playerTileset = nil
@@ -18,6 +18,7 @@ function loadPlayer()
 	player.invincibilityTimer = Timer:new(1, "single")
 	player.recoilTimer = Timer:new(0.14, "single")
 	
+	player.attack = Attack:new(0.25, 12)
 	
 	playerTilesetImage = love.graphics.newImage("assets/tilesets/player.png")
 	playerTilesetImage:setFilter("nearest", "nearest")
@@ -32,34 +33,6 @@ end
 
 local animationIndex = 1
 
- 
---[[local timerValue = 0
-local timerMax = 0.14
-function updatePlayerTimer(dt)
-	timerValue = timerValue + dt 
-	if timerValue > timerMax then 
-		timerValue = 0 
-		if player.moveState == PlayerStates.recoil then 
-			player.moveState = PlayerStates.neutral 
-		end
-	end 
-end
-
-local invincibilityTimerValue = 0
-local invincibilityTimerMax = 1
-function updateInvincibilityTimer(dt)
-	invincibilityTimerValue = invincibilityTimerValue + dt 
-	if invincibilityTimerValue > invincibilityTimerMax then 
-		invincibilityTimerValue = 0 
-		player.bodyState = PlayerStates.neutral
-	end
-end]]
-
-
-local attackTotalFrames = 12
-local attackCurrentFrame = 0
--- should make this a list that can grow/shrink so that you can have multiple active attacks
-local attackAABB = AABB:new(0,0,0,0)
 
 -- this needs to be calculated
 local recoilAmount = 70
@@ -78,8 +51,7 @@ function updatePlayer(dt)
 			if player.moveState == PlayerStates.recoil then 
 				player.moveState = PlayerStates.neutral 
 			end
-		end
-		
+		end	
 		-- move the player
 		player.box:scalarMove(recoilX * dt, recoilY * dt)
 	else 
@@ -87,22 +59,20 @@ function updatePlayer(dt)
 		player.vel.x = 0
 		player.vel.y = 0
 		
-		if getKeyDown("h") and player.moveState ~= PlayerStates.attacking then 
+		if getKeyPress("h") and player.moveState ~= PlayerStates.attacking then 
 			-- attack
 			player.moveState = PlayerStates.attacking
-			attackCurrentFrame = 0
+			player.attack:reset()
 			
 			if player.facingDirection == directions.right then 
-				attackAABB = AABB:new(player.box.maxVec.x,player.box.minVec.y,16,16)
+				player.attack.box = AABB:new(player.box.maxVec.x, player.box.minVec.y,16,16)
 			elseif player.facingDirection == directions.left then 
-				attackAABB = AABB:new(player.box.minVec.x - 16,player.box.minVec.y,16,16)
+				player.attack.box = AABB:new(player.box.minVec.x - 16, player.box.minVec.y,16,16)
 			elseif player.facingDirection == directions.up then 
-				attackAABB = AABB:new(player.box.minVec.x, player.box.minVec.y - 16,16,16)
+				player.attack.box = AABB:new(player.box.minVec.x, player.box.minVec.y - 16,16,16)
 			elseif player.facingDirection == directions.down then 
-				attackAABB = AABB:new(player.box.minVec.x ,player.box.maxVec.y,16,16)
-			end
-			
-			
+				player.attack.box = AABB:new(player.box.minVec.x, player.box.maxVec.y,16,16)
+			end	
 		end
 		
 		if player.moveState ~= PlayerStates.attacking then 
@@ -131,8 +101,7 @@ function updatePlayer(dt)
 		if getKeyPress("e") then player.currentHealth = player.currentHealth + 0.25 end 	
 
 		if player.moveState == PlayerStates.attacking then 
-			attackCurrentFrame = attackCurrentFrame + 1
-			if attackCurrentFrame > attackTotalFrames then 
+			if player.attack:isComplete() then 
 				player.moveState = PlayerStates.neutral
 			end
 		else 
@@ -140,7 +109,6 @@ function updatePlayer(dt)
 			player.box:scalarMove(player.vel.x, player.vel.y)
 		end 
 	end
-	
 	
 	local collisionInfo = playerVsEnemiesCollisions(player.box)
 	-- check for collisions with enemies on the current tilemap
@@ -188,9 +156,9 @@ function updatePlayer(dt)
 
 end
 
-function getPlayerAttackAABB()
+function getPlayerAttack()
 	if player.moveState == PlayerStates.attacking then 
-		return attackAABB
+		return player.attack
 	else 
 		return nil 
 	end
@@ -220,7 +188,7 @@ function drawPlayer(screenShiftX, screenShiftY)
 	
 	-- put in a sword anim or something 
 	if player.moveState == PlayerStates.attacking then 
-		love.graphics.rectangle("fill", attackAABB.minVec.x, attackAABB.minVec.y, attackAABB.width, attackAABB.height)
+		love.graphics.rectangle("fill", player.attack.box.minVec.x, player.attack.box.minVec.y, player.attack.box.width, player.attack.box.height)
 	end 
 		
 	love.graphics.setColor(255,255,255)
