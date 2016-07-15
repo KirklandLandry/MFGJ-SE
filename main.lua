@@ -57,7 +57,13 @@ globalTileSize = 16
 -- multiple layers / height
 
 -- NOTE:
--- should maybe seperate the map into a collision layer and tile layer
+-- should maybe seperate the map into a collision layer and tile layer. yes, do this.
+
+-- NOTE: 
+-- try adding a minimap?
+
+-- NOTE: 
+-- don't start enemies too close together. also get enemy-enemy collision detection/resolution going
 
 -- NOTE: 
 -- should make a generic spritebatch loop. can't have one for map, but everything else should be generic enough

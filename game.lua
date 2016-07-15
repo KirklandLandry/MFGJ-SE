@@ -26,7 +26,8 @@ directions = {up = "up", down = "down", left = "left", right = "right"}
 	return result 
  end
 
-GameStates = {scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight", neutral = "neutral", scrollComplete = "scrollComplete"}
+GameStates = {neutral = "neutral", pause = "pause", gameOver = "gameOver", title = "title",
+			  scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight",  scrollComplete = "scrollComplete"}
 gameState = nil 
 
 local effects = nil
