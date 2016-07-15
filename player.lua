@@ -5,6 +5,11 @@ local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartCon
 local playerQuads = nil
 local playerTileset = nil
 
+-- debug. remove later.
+function getPlayerCoord()
+	return Vector:new(player.box.minVec.x, player.box.minVec.y)
+end
+
 function loadPlayer() 
 	player.facingDirection = directions.down
 
@@ -95,8 +100,7 @@ function updatePlayer(dt)
 	
 	local collisionInfo = playerVsEnemiesCollisions(player.box)
 	-- check for collisions with enemies on the current tilemap
-	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil and player.bodyState ~= PlayerStates.invincible then 
-		
+	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil and player.bodyState ~= PlayerStates.invincible then 	
 		-- draw a recoil animation
 		player.box:scalarMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.y * collisionInfo.penetration)
 		
@@ -118,9 +122,36 @@ function updatePlayer(dt)
 	
 	-- check for collisions against the tilemap 
 	if (checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
-	--[[local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
+	
+	
+	-- runs twice. once for x and once for y. 
+	-- this could be collapsed into one thing, do that later 
+	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)--)), "none")
 	if tilemapCorrectionInfo ~= nil then 
 		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+	end
+	
+	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)--)), "none")
+	if tilemapCorrectionInfo ~= nil then 
+		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+	end
+	
+	--[[local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "none")
+	if tilemapCorrectionInfo ~= nil then 
+		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+		--return 
+	end
+	if tilemapCorrectionInfo ~= nil then 
+		if tilemapCorrectionInfo.axis == "x" then 
+			tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "y")
+		elseif tilemapCorrectionInfo.axis == "y" then
+			tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "x")
+		end
+			
+		if tilemapCorrectionInfo ~= nil then 
+			player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+			--return
+		end
 	end]]
 end
 

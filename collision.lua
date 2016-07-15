@@ -70,7 +70,6 @@ function AABBvsAABBDetectionAndResolution(a, b)
 					result.normal.y = -1
 				end
 				result.penetration = yOverlap
-
 				return result 
 			end
 		end
@@ -79,23 +78,25 @@ function AABBvsAABBDetectionAndResolution(a, b)
 end
 
 
+-- so up and down works fine but on left and right you can still glitch through a wall 
+-- why. I can't figure it out. even if you run it twice, it still glitches.
+-- I've got it to consistently do one side, but it can never do both. 
 
--- this isn't fully tested and the getTileColliderY presents a problem
--- it's fine for vertical movement but left right will cause a gap
--- might need multiple n's, need to think it through
 function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
 	local result = {normal = Vector:new(0,0), penetration = 0}
 
+	local aHeight = (a.maxVec.y - a:getTileColliderY())
+	
 	-- remember to measure from the centre to make it work properly 
 	-- it'll look like it works if the widths are the same, but diff width will throw everything off
-	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + a.height/2))
+	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + aHeight/2 ))--a.height/2))
 						
 	local aExtentX = a.width / 2 
 	local bExtentX = bw / 2 
 	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
 	-- SAT test on x
 	if xOverlap > 0 then 
-		local aExtentY = a.height / 2 
+		local aExtentY = aHeight/2
 		local bExtentY = bh / 2 
 		local yOverlap = aExtentY + bExtentY - math.abs(n.y)		
 		-- SAT test on y
@@ -120,11 +121,110 @@ function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
 					result.normal.y = -1
 				end
 				result.penetration = yOverlap
-
 				return result 
 			end
 		end
 	end
 	return nil 
 end
+
+
+
+-- force resolution on x
+function AABBvsTileDetectionAndResolutionX(a, bx,by,bw,bh)
+	local result = {normal = Vector:new(0,0), penetration = 0}
+
+	local aHeight = (a.maxVec.y - a:getTileColliderY())
+	
+	-- remember to measure from the centre to make it work properly 
+	-- it'll look like it works if the widths are the same, but diff width will throw everything off
+	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + aHeight/2 ))--a.height/2))
+						
+	local aExtentX = a.width / 2 
+	local bExtentX = bw / 2 
+	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
+	-- SAT test on x
+	if xOverlap > 0 then 
+		local aExtentY = aHeight/2
+		local bExtentY = bh / 2 
+		local yOverlap = aExtentY + bExtentY - math.abs(n.y)		
+		-- SAT test on y
+		if yOverlap > 0 then 
+			-- which is the axis of least penetration
+			--if xOverlap < yOverlap then 
+				if n.x < 0 then 
+					result.normal.x = 1  
+					result.normal.y =  0
+				else
+					result.normal.x = -1 
+					result.normal.y = 0 
+				end
+				result.penetration = xOverlap
+				return result 
+			--[[else 
+				if n.y < 0 then 
+					result.normal.x =  0
+					result.normal.y = 1
+				else
+					result.normal.x = 0
+					result.normal.y = -1
+				end
+				result.penetration = yOverlap
+				return result 
+			end]]
+		end
+	end
+	return nil 
+end
+
+
+-- force resolution on y
+function AABBvsTileDetectionAndResolutionY(a, bx,by,bw,bh)
+	local result = {normal = Vector:new(0,0), penetration = 0}
+
+	local aHeight = (a.maxVec.y - a:getTileColliderY())
+	
+	-- remember to measure from the centre to make it work properly 
+	-- it'll look like it works if the widths are the same, but diff width will throw everything off
+	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + aHeight/2 ))--a.height/2))
+						
+	local aExtentX = a.width / 2 
+	local bExtentX = bw / 2 
+	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
+	-- SAT test on x
+	if xOverlap > 0 then 
+		local aExtentY = aHeight/2
+		local bExtentY = bh / 2 
+		local yOverlap = aExtentY + bExtentY - math.abs(n.y)		
+		-- SAT test on y
+		if yOverlap > 0 then 
+			-- which is the axis of least penetration
+			--[[if xOverlap < yOverlap then 
+				if n.x < 0 then 
+					result.normal.x = 1  
+					result.normal.y =  0
+				else
+					result.normal.x = -1 
+					result.normal.y = 0 
+				end
+				result.penetration = xOverlap
+				return result ]]
+			--else 
+				if n.y < 0 then 
+					result.normal.x =  0
+					result.normal.y = 1
+				else
+					result.normal.x = 0
+					result.normal.y = -1
+				end
+				result.penetration = yOverlap
+				return result 
+			--end
+		end
+	end
+	return nil 
+end
+
+
+
 

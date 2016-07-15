@@ -175,7 +175,7 @@ function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)
 	return (result)
 end
 
-function checkTileMapCollision(box, tileX, tileY)
+function checkTileMapCollision(box, tileX, tileY)--, axis)
 	local yMin, yMax, xMin, xMax
 	if tileX <= 1 then 
 		xMin = 1 
@@ -195,7 +195,7 @@ function checkTileMapCollision(box, tileX, tileY)
 	
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
-	local currentWorldTileMap = world[worldY][worldX].base
+	--[[local currentWorldTileMap = world[worldY][worldX].base
 	for y = yMin, yMin + 2 do 
 		for x = xMin, xMin + 2 do 
 			if currentWorldTileMap[y][x] == 2 then		
@@ -206,9 +206,11 @@ function checkTileMapCollision(box, tileX, tileY)
 			end
 		end	
 	end	
-	return false
+	return false]]
 	
-	--[[local result = nil 
+
+	
+	local result = nil 
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
 	local currentWorldTileMap = world[worldY][worldX].base
@@ -218,12 +220,66 @@ function checkTileMapCollision(box, tileX, tileY)
 				result = AABBvsTileDetectionAndResolution(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
 				if result ~= nil then 
 					return result 
+				end			
+			end
+		end	
+	end	
+	return result 
+	
+end
+
+	--[[local result = nil 
+	-- now check for collisions with the tiles on the tilemap
+	-- checks a 3x3 space centred around the player
+	local currentWorldTileMap = world[worldY][worldX].base
+	for y = yMin, yMin + 2 do 
+		for x = xMin, xMin + 2 do 
+			if currentWorldTileMap[y][x] == 2 then		
+				local resultX = AABBvsTileDetectionAndResolutionX(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+				local resultY = AABBvsTileDetectionAndResolutionY(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+				if resultX ~= nil then 
+					result = {normal = Vector:new(0,0), penetration = Vector:new(0,0)}
+					result.normal.x = resultX.normal.x 
+					result.penetration.x = resultX.penetration
+					return result 
+				elseif resultY ~= nil then 
+					result.normal.y = resultY.normal.y
+					result.penetration.y = resultY.penetration
+					return result 
 				end
+				if axis == "none" then 
+					result = AABBvsTileDetectionAndResolution(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+					if result ~= nil then 
+						return result 
+					end
+				elseif axis == "x" then 
+					result = AABBvsTileDetectionAndResolutionX(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+					if result ~= nil then 
+						return result 
+					end
+				elseif axis == "y" then 
+					result = AABBvsTileDetectionAndResolutionY(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
+					if result ~= nil then 
+						return result 
+					end
+				end	
 			end
 		end	
 	end	
 	return result ]]
-end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function playerVsEnemiesCollisions(playerAABB)
 	local result = nil 
@@ -282,7 +338,7 @@ function updateMap(dt)
 			gameState = GameStates.scrollingUp
 			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.up)
 		else 
-		-- this should never happen
+			-- this should never happen
 			updateTileSetBatch(world[worldY][worldX].base)
 		end
 		prevWorldX = worldX 
@@ -344,5 +400,60 @@ function drawTileSetBatch(screenShiftX, screenShiftY)
 		end
 	end
 	
+	debugDrawCollisionMap()
+	debugDrawPlayerCollisionBounds()
 	
+end
+
+
+function debugDrawCollisionMap()
+	for y=1,tilesDisplayHeight do
+		for x=1, tilesDisplayWidth do 
+			if world[worldY][worldX].base[y][x] == 2 then		
+				love.graphics.setColor(255,0,0)
+			else 
+				love.graphics.setColor(0,200,22)
+			end
+			love.graphics.rectangle("line", (x-1)*globalTileSize, (y-1)*globalTileSize, globalTileSize, globalTileSize)
+			love.graphics.setColor(255,255,255)
+		end
+	end 
+end
+
+
+-- just debug to show which tiles are being checked for player collisions 
+function debugDrawPlayerCollisionBounds()
+	local playerCoord = getPlayerCoord()
+	local tv = getTileCoordinate(playerCoord.x, playerCoord.y)
+	local tileX = tv.x 
+	local tileY = tv.y 
+	local yMin, yMax, xMin, xMax
+	if tileX <= 1 then 
+		xMin = 1 
+	elseif tileX >= tilesDisplayWidth then 
+		xMin = tilesDisplayWidth - 2 
+	else 
+		xMin = tileX - 1 
+	end
+	
+	if tileY <= 1 then 
+		yMin = 1
+	elseif tileY >= tilesDisplayHeight then 
+		yMin = tilesDisplayHeight - 2 
+	else 
+		yMin = tileY - 1 
+	end
+	
+	local currentWorldTileMap = world[worldY][worldX].base
+	for y = yMin, yMin + 2 do 
+		for x = xMin, xMin + 2 do 
+			if currentWorldTileMap[y][x] == 2 then		
+				love.graphics.setColor(120,0,255)
+			else 
+				love.graphics.setColor(0,0,255)
+			end
+			love.graphics.rectangle("line", (x-1)*globalTileSize, (y-1)*globalTileSize, globalTileSize, globalTileSize)
+			love.graphics.setColor(255,255,255)
+		end	
+	end	
 end
