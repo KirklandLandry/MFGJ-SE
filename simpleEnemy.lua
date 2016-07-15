@@ -1,4 +1,4 @@
-SimpleEnemy = {box = AABB:new(0, 0, 16, 16), vel = Vector:new(0,0), currentHealth = 4.50, facingDirection = nil, state = nil, timerValue = nil, timerMax = nil}
+SimpleEnemy = {box = AABB:new(0, 0, 16, 16), vel = Vector:new(0,0), currentHealth = 4.50, facingDirection = nil, state = nil, moveTimer = nil}
 local EnemyState = {waiting = "waiting", moving = "moving"}
 
 function SimpleEnemy:new(x, y, width, height)	
@@ -12,8 +12,7 @@ function SimpleEnemy:new(x, y, width, height)
 	--o.height = height
 	o.state = EnemyState.waiting
 	o.facingDirection = directions.down
-	o.timerValue = 0
-	o.timerMax = 1
+	o.moveTimer = Timer:new(1, TimerModes.repeating)
 	return o
 end
  
@@ -24,7 +23,13 @@ end
  function SimpleEnemy:update(dt)
 	assert(dt~=nil, "don't pass an empty dt, dummy")
 	
-	self:updateTimer(dt)
+	if self.moveTimer:isComplete(dt) then 
+		if self.state == EnemyState.waiting then 
+			self.state = EnemyState.moving
+			self.facingDirection = getRandomDirection()
+		elseif self.state == EnemyState.moving then self.state = EnemyState.waiting end
+	end
+	
 	self:move(dt)
 	
 	-- check to see if it went off the edge and move based on the correction that gets returned 
@@ -33,14 +38,19 @@ end
 	local enemyMapCoords = getTileCoordinate(self.box.minVec.x, self.box.minVec.y)
 	-- check if a collision occurs with the map 
 	if checkTileMapCollision(self.box, enemyMapCoords.x, enemyMapCoords.y) then 
-	
+		
 	end
 end
  
-function SimpleEnemy:draw()
-love.graphics.setColor(99,165,33)
+function SimpleEnemy:draw(i)
+	love.graphics.setColor(99,165,33)
 	love.graphics.rectangle("fill", self.box.minVec.x, self.box.minVec.y, self.box.width, self.box.height)
 	self.box:drawCorners()
+	
+	-- print out the enemies array index 
+	love.graphics.setColor(0,0,0)
+	love.graphics.print(i,self.box.minVec.x , self.box.minVec.y )
+
 end
 
 -- do something simple to start
@@ -62,16 +72,5 @@ function SimpleEnemy:move(dt)
 			self.vel.x = (moveAmount * dt)
 		end
 		self.box:scalarMove(self.vel.x, self.vel.y)
-	end
-end
-
-function SimpleEnemy:updateTimer(dt)
-	self.timerValue = self.timerValue + dt 
-	if self.timerValue > self.timerMax then 
-		self.timerValue = 0 
-		if self.state == EnemyState.waiting then 
-			self.state = EnemyState.moving
-			self.facingDirection = getRandomDirection()
-		elseif self.state == EnemyState.moving then self.state = EnemyState.waiting end
 	end
 end

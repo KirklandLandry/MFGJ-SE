@@ -12,7 +12,7 @@
 directions = {up = "up", down = "down", left = "left", right = "right"}
  function getRandomDirection()
 	local r = math.random(1,100)
-	print(r)
+	--print(r)
 	local result = directions.up 
 	if r <=25 then 
 		result = directions.up 

@@ -9,6 +9,7 @@ require "queue"
 require "ui"
 require "collision"
 require "enemyManager"
+require "timer"
 
 -- this is the actual physical window size 
 screenWidth = nil

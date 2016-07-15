@@ -1,6 +1,8 @@
-local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth"}
+local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth", attacking = "attacking"}
 
-local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral}
+local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, 
+				facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral, 
+				invincibilityTimer = nil, recoilTimer = nil}
 
 local playerQuads = nil
 local playerTileset = nil
@@ -13,21 +15,25 @@ end
 function loadPlayer() 
 	player.facingDirection = directions.down
 
+	player.invincibilityTimer = Timer:new(1, "single")
+	player.recoilTimer = Timer:new(0.14, "single")
+	
+	
 	playerTilesetImage = love.graphics.newImage("assets/tilesets/player.png")
 	playerTilesetImage:setFilter("nearest", "nearest")
-
+	
 	playerQuads = {}
 	playerQuads.neutral = {}
 	playerQuads.neutral[1] = love.graphics.newQuad(0,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
 	playerQuads.neutral[2] = love.graphics.newQuad(12*1,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
 	playerQuads.neutral[3] = love.graphics.newQuad(12*2,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
 	playerQuads.neutral[4] = love.graphics.newQuad(12*3,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
-	
 end 
 
 local animationIndex = 1
 
-local timerValue = 0
+ 
+--[[local timerValue = 0
 local timerMax = 0.14
 function updatePlayerTimer(dt)
 	timerValue = timerValue + dt 
@@ -36,7 +42,7 @@ function updatePlayerTimer(dt)
 		if player.moveState == PlayerStates.recoil then 
 			player.moveState = PlayerStates.neutral 
 		end
-	end
+	end 
 end
 
 local invincibilityTimerValue = 0
@@ -47,22 +53,33 @@ function updateInvincibilityTimer(dt)
 		invincibilityTimerValue = 0 
 		player.bodyState = PlayerStates.neutral
 	end
-end
+end]]
 
+
+local attackTotalFrames = 12
+local attackCurrentFrame = 0
+-- should make this a list that can grow/shrink so that you can have multiple active attacks
+local attackAABB = AABB:new(0,0,0,0)
 
 -- this needs to be calculated
--- give him an inivincibility / health state seperate from recoil (movestate)
 local recoilAmount = 70
 local recoilX = 10 
 local recoilY = 10
 function updatePlayer(dt)
 	
 	if player.bodyState == PlayerStates.invincible then 
-		updateInvincibilityTimer(dt)
+		if player.invincibilityTimer:isComplete(dt) then 
+			player.bodyState = PlayerStates.neutral
+		end
 	end
 	
 	if player.moveState == PlayerStates.recoil then 
-		updatePlayerTimer(dt)
+		if player.recoilTimer:isComplete(dt) then 
+			if player.moveState == PlayerStates.recoil then 
+				player.moveState = PlayerStates.neutral 
+			end
+		end
+		
 		-- move the player
 		player.box:scalarMove(recoilX * dt, recoilY * dt)
 	else 
@@ -70,31 +87,58 @@ function updatePlayer(dt)
 		player.vel.x = 0
 		player.vel.y = 0
 		
-		if getKeyDown("up") then 
-			player.vel.y = -impulse * dt
-			player.facingDirection = directions.up
-			animationIndex = 4
-		elseif  getKeyDown("down") then 
-			player.vel.y = impulse * dt
-			player.facingDirection = directions.down
-			animationIndex = 1
-		end	
-		if getKeyDown("left") then 
-			player.vel.x = -impulse * dt
-			player.facingDirection = directions.left
-			animationIndex = 2
-		elseif getKeyDown("right") then 
-			player.vel.x = impulse * dt
-			player.facingDirection = directions.right
-			animationIndex = 3
+		if getKeyDown("h") and player.moveState ~= PlayerStates.attacking then 
+			-- attack
+			player.moveState = PlayerStates.attacking
+			attackCurrentFrame = 0
+			
+			if player.facingDirection == directions.right then 
+				attackAABB = AABB:new(player.box.maxVec.x,player.box.minVec.y,16,16)
+			elseif player.facingDirection == directions.left then 
+				attackAABB = AABB:new(player.box.minVec.x - 16,player.box.minVec.y,16,16)
+			elseif player.facingDirection == directions.up then 
+				attackAABB = AABB:new(player.box.minVec.x, player.box.minVec.y - 16,16,16)
+			elseif player.facingDirection == directions.down then 
+				attackAABB = AABB:new(player.box.minVec.x ,player.box.maxVec.y,16,16)
+			end
+			
+			
+		end
+		
+		if player.moveState ~= PlayerStates.attacking then 
+			if getKeyDown("up") then 
+				player.vel.y = -impulse * dt
+				player.facingDirection = directions.up
+				animationIndex = 4
+			elseif  getKeyDown("down") then 
+				player.vel.y = impulse * dt
+				player.facingDirection = directions.down
+				animationIndex = 1
+			end	
+			if getKeyDown("left") then 
+				player.vel.x = -impulse * dt
+				player.facingDirection = directions.left
+				animationIndex = 2
+			elseif getKeyDown("right") then 
+				player.vel.x = impulse * dt
+				player.facingDirection = directions.right
+				animationIndex = 3
+			end
 		end
 		
 		-- debug change health 
 		if getKeyPress("q") then player.currentHealth = player.currentHealth - 0.25 end 
 		if getKeyPress("e") then player.currentHealth = player.currentHealth + 0.25 end 	
 
-		-- move the player
-		player.box:scalarMove(player.vel.x, player.vel.y)
+		if player.moveState == PlayerStates.attacking then 
+			attackCurrentFrame = attackCurrentFrame + 1
+			if attackCurrentFrame > attackTotalFrames then 
+				player.moveState = PlayerStates.neutral
+			end
+		else 
+			-- move the player
+			player.box:scalarMove(player.vel.x, player.vel.y)
+		end 
 	end
 	
 	
@@ -107,12 +151,15 @@ function updatePlayer(dt)
 		player.moveState = PlayerStates.recoil
 		player.bodyState = PlayerStates.invincible
 		
+		player.invincibilityTimer:reset()
+		player.recoilTimer:reset()
+		
 		recoilX = collisionInfo.normal.x * recoilAmount
 		recoilY = collisionInfo.normal.y * recoilAmount
 
 		player.currentHealth = player.currentHealth - 0.25
 	end
- 
+	
 	-- get the player's tile coordinates
 	local playerMapCoords = getTileCoordinate(player.box.minVec.x, player.box.minVec.y)
 	
@@ -121,39 +168,34 @@ function updatePlayer(dt)
 	player.box:vectorMove(shiftVector)
 	
 	-- check for collisions against the tilemap 
+	-- this is very cheap, it only reverses the player's velocity on collision 
+	-- this shouldn't be needed once the collision method below works properly 
 	if (checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
 	
 	
 	-- runs twice. once for x and once for y. 
 	-- this could be collapsed into one thing, do that later 
-	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)--)), "none")
+	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
 		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end
 	
-	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)--)), "none")
+	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
 		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end
 	
-	--[[local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "none")
-	if tilemapCorrectionInfo ~= nil then 
-		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
-		--return 
-	end
-	if tilemapCorrectionInfo ~= nil then 
-		if tilemapCorrectionInfo.axis == "x" then 
-			tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "y")
-		elseif tilemapCorrectionInfo.axis == "y" then
-			tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y, "x")
-		end
-			
-		if tilemapCorrectionInfo ~= nil then 
-			player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
-			--return
-		end
-	end]]
+
 end
+
+function getPlayerAttackAABB()
+	if player.moveState == PlayerStates.attacking then 
+		return attackAABB
+	else 
+		return nil 
+	end
+end
+
 
 function drawPlayer(screenShiftX, screenShiftY)
 
@@ -175,6 +217,12 @@ function drawPlayer(screenShiftX, screenShiftY)
 	elseif gameState == GameStates.scrollingDown then 
 		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, baseScreenHeight - globalTileSize + screenShiftY)	
 	end
+	
+	-- put in a sword anim or something 
+	if player.moveState == PlayerStates.attacking then 
+		love.graphics.rectangle("fill", attackAABB.minVec.x, attackAABB.minVec.y, attackAABB.width, attackAABB.height)
+	end 
+		
 	love.graphics.setColor(255,255,255)
 	player.box:drawCorners()
 end

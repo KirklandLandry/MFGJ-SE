@@ -78,9 +78,15 @@ function AABBvsAABBDetectionAndResolution(a, b)
 end
 
 
--- so up and down works fine but on left and right you can still glitch through a wall 
--- why. I can't figure it out. even if you run it twice, it still glitches.
--- I've got it to consistently do one side, but it can never do both. 
+-- this works fine with one direction
+-- the problem is if it goes at something on a diagonal
+-- it's only first resolving the axis of least penetration. 
+-- but it shouldn't matter
+-- resolving one axis should mean the other axis can't be intersecting anymore
+-- which means something's going wrong at some point 
+
+-- if the collision goes far enough, right now you can still totall get bumped out of the map 
+-- if the enemy pushes you enough right when you're at the edge you'll get bumped out 
 
 function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
 	local result = {normal = Vector:new(0,0), penetration = 0}

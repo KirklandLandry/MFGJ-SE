@@ -175,7 +175,7 @@ function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)
 	return (result)
 end
 
-function checkTileMapCollision(box, tileX, tileY)--, axis)
+function checkTileMapCollision(box, tileX, tileY)
 	local yMin, yMax, xMin, xMax
 	if tileX <= 1 then 
 		xMin = 1 
@@ -193,23 +193,6 @@ function checkTileMapCollision(box, tileX, tileY)--, axis)
 		yMin = tileY - 1 
 	end
 	
-	-- now check for collisions with the tiles on the tilemap
-	-- checks a 3x3 space centred around the player
-	--[[local currentWorldTileMap = world[worldY][worldX].base
-	for y = yMin, yMin + 2 do 
-		for x = xMin, xMin + 2 do 
-			if currentWorldTileMap[y][x] == 2 then		
-				if AABBvsTileMapCoords(box, (x-1)*globalTileSize,(y-1)*globalTileSize,((x-1)*globalTileSize)+globalTileSize,((y-1)*globalTileSize)+globalTileSize) then 					
-					-- if we're here there's been a collision. need to figure out on which axis and resolve
-					return true
-				end
-			end
-		end	
-	end	
-	return false]]
-	
-
-	
 	local result = nil 
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
@@ -225,63 +208,13 @@ function checkTileMapCollision(box, tileX, tileY)--, axis)
 		end	
 	end	
 	return result 
-	
 end
-
-	--[[local result = nil 
-	-- now check for collisions with the tiles on the tilemap
-	-- checks a 3x3 space centred around the player
-	local currentWorldTileMap = world[worldY][worldX].base
-	for y = yMin, yMin + 2 do 
-		for x = xMin, xMin + 2 do 
-			if currentWorldTileMap[y][x] == 2 then		
-				local resultX = AABBvsTileDetectionAndResolutionX(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
-				local resultY = AABBvsTileDetectionAndResolutionY(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
-				if resultX ~= nil then 
-					result = {normal = Vector:new(0,0), penetration = Vector:new(0,0)}
-					result.normal.x = resultX.normal.x 
-					result.penetration.x = resultX.penetration
-					return result 
-				elseif resultY ~= nil then 
-					result.normal.y = resultY.normal.y
-					result.penetration.y = resultY.penetration
-					return result 
-				end
-				if axis == "none" then 
-					result = AABBvsTileDetectionAndResolution(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
-					if result ~= nil then 
-						return result 
-					end
-				elseif axis == "x" then 
-					result = AABBvsTileDetectionAndResolutionX(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
-					if result ~= nil then 
-						return result 
-					end
-				elseif axis == "y" then 
-					result = AABBvsTileDetectionAndResolutionY(box, (x-1)*globalTileSize,(y-1)*globalTileSize, globalTileSize, globalTileSize)
-					if result ~= nil then 
-						return result 
-					end
-				end	
-			end
-		end	
-	end	
-	return result ]]
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 function playerVsEnemiesCollisions(playerAABB)
+	assert(playerAABB ~= nil, "don't pass an empty arg")
+	
 	local result = nil 
 	for i=1, #world[worldY][worldX].enemies do 	
 		local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
@@ -316,9 +249,24 @@ function updateMap(dt)
 		updateTileSetBatch(world[worldY][worldX].base)	
 	end
 	
-	for i=1, #world[prevWorldY][prevWorldX].enemies do 
+	local length = #world[prevWorldY][prevWorldX].enemies
+	for i=length,1,-1  do 
 		world[prevWorldY][prevWorldX].enemies[i]:update(dt)
+		
+		local playerAttack = getPlayerAttackAABB()
+		if playerAttack ~= nil then 
+			
+			local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
+			local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack)	
+			
+			if collisionResult ~= nil then 
+				table.remove(world[prevWorldY][prevWorldX].enemies, i)
+			end
+		end
 	end
+	
+	
+	
 	
 	if prevWorldX ~= worldX or prevWorldY ~= worldY then 
 		print("\ncurrent: "..worldX..", "..worldY, "previous: "..prevWorldX..", "..prevWorldY)
@@ -396,7 +344,7 @@ function drawTileSetBatch(screenShiftX, screenShiftY)
 	
 	if gameState == GameStates.neutral then 
 		for i=1, #world[prevWorldY][prevWorldX].enemies do 
-			world[prevWorldY][prevWorldX].enemies[i]:draw(dt)
+			world[prevWorldY][prevWorldX].enemies[i]:draw(i)
 		end
 	end
 	
