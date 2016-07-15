@@ -35,11 +35,10 @@ end
 
 function AABBvsAABBDetectionAndResolution(a, b)	
 	local result = {normal = Vector:new(0,0), penetration = 0}
-
 	-- remember to measure from the centre to make it work properly 
 	-- it'll look like it works if the widths are the same, but diff width will throw everything off
 	local n = Vector:new((b.minVec.x + b.width/2) - (a.minVec.x + a.width/2), (b.minVec.y + b.height/2) - (a.minVec.y + a.height/2))
-						
+	
 	local aExtentX = a.width / 2 
 	local bExtentX =  b.width  / 2 
 	local xOverlap = aExtentX + bExtentX - math.abs(n.x)
@@ -90,9 +89,7 @@ end
 
 function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
 	local result = {normal = Vector:new(0,0), penetration = 0}
-
 	local aHeight = (a.maxVec.y - a:getTileColliderY())
-	
 	-- remember to measure from the centre to make it work properly 
 	-- it'll look like it works if the widths are the same, but diff width will throw everything off
 	local n = Vector:new((bx + bw/2) - (a.minVec.x + a.width/2), (by + bh/2) - (a:getTileColliderY() + aHeight/2 ))--a.height/2))

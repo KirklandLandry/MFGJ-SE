@@ -26,6 +26,15 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- NOTE: 
+-- work on seperating map and collision / enemy management
+
+-- NOTE: 
+-- change attack frames to be more like fighting games 
+-- startup, active frames, cooldown  
+-- either that, or work on giving attacks (and other stuff) pixel perfect collision
+-- also, the player's box should be a bit less than the player sprite probably. it should also be able to change based on 
+-- animation (so a bounding box size / position is linked to a frame)
 
 -- NOTE:
 -- could enemy and player be collapsed into 1 base type? 

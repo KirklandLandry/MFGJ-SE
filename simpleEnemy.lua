@@ -5,11 +5,7 @@ function SimpleEnemy:new(x, y, width, height)
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
-	--o.minVec = Vector:new(x, y)
-	--o.maxVec = Vector:new(x+width, y+height)
 	o.box = AABB:new(x,y,width,height)
-	--o.width = width
-	--o.height = height
 	o.state = EnemyState.waiting
 	o.facingDirection = directions.down
 	o.moveTimer = Timer:new(1, TimerModes.repeating)
@@ -28,7 +24,9 @@ end
 		if self.state == EnemyState.waiting then 
 			self.state = EnemyState.moving
 			self.facingDirection = getRandomDirection()
-		elseif self.state == EnemyState.moving then self.state = EnemyState.waiting end
+		elseif self.state == EnemyState.moving then 
+			self.state = EnemyState.waiting 
+		end
 	end
 	
 	if self.invincibilityFrames ~= 0 then self.invincibilityFrames = self.invincibilityFrames - 1 end
@@ -72,10 +70,7 @@ function SimpleEnemy:draw(i)
 	love.graphics.print("hp:"..self.currentHealth, self.box.minVec.x, self.box.minVec.y + 5, 0, 0.4, 0.4)
 end
 
--- do something simple to start
--- wait 1 second 
--- move in a direction for 2 seconds
--- repeat
+
 local moveAmount = 10
 function SimpleEnemy:move(dt)
 	self.vel.x = 0 

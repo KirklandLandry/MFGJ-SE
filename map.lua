@@ -211,7 +211,6 @@ function checkTileMapCollision(box, tileX, tileY)
 end
 
 
-
 function playerVsEnemiesCollisions(playerAABB)
 	assert(playerAABB ~= nil, "don't pass an empty arg")
 	
@@ -228,8 +227,7 @@ end
 
 function getTileCoordinate(x, y)
 	-- + 1 because it'll floor to 0 and tilemaps (tables in general) all start at <1,1> 
-	local result = Vector:new(math.floor(x / globalTileSize) + 1, math.floor(y / globalTileSize) + 1)
-	return result 
+	return Vector:new(math.floor(x / globalTileSize) + 1, math.floor(y / globalTileSize) + 1)
 end
 
 function updateMap(dt)
@@ -257,11 +255,9 @@ function updateMap(dt)
 			-- should be getting a list once the playerattack is changed to a list 
 			-- of currently active player attacks
 			local playerAttack = getPlayerAttack()
-			if playerAttack ~= nil then 
-				
+			if playerAttack ~= nil then 			
 				local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
-				local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack.box)	
-				
+				local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack.box)			
 				if collisionResult ~= nil then 
 					-- make a variant object called attack or something that's and AABB and 
 					-- also contains damage and element info and stuff like that.
@@ -276,9 +272,7 @@ function updateMap(dt)
 		end
 	end
 	
-	
-	
-	
+
 	if prevWorldX ~= worldX or prevWorldY ~= worldY then 
 		print("\ncurrent: "..worldX..", "..worldY, "previous: "..prevWorldX..", "..prevWorldY)
 		print("current room contains...\n"..#world[worldY][worldX].enemies.." enemies")
@@ -360,8 +354,7 @@ function drawTileSetBatch(screenShiftX, screenShiftY)
 	end
 	
 	debugDrawCollisionMap()
-	debugDrawPlayerCollisionBounds()
-	
+	debugDrawPlayerCollisionBounds()	
 end
 
 

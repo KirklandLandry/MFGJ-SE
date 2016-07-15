@@ -1,6 +1,8 @@
 Attack = {box = nil, damage = 0, currentFrame = 0, totalFrames = 0}
 
 -- should later be able to pass in spritesheet
+-- box should be sized seperate from the sprite
+
 function Attack:new(damage, totalFrames)	
 	local o = {}
 	setmetatable(o, self)
