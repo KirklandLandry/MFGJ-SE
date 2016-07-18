@@ -145,26 +145,26 @@ function Player:update(dt)
 	end
 	
 	-- get the player's tile coordinates
-	local playerMapCoords = getTileCoordinate(topLeft.x, topLeft.y)
+	local playerTileCoords = getTileCoordinate(topLeft.x, topLeft.y)
 	
 	-- check for moving to the next tilemap
-	local shiftVector = (checkIfMovedToNextTileMap(self.body.box, playerMapCoords.x, playerMapCoords.y))
+	local shiftVector = (checkIfMovedToNextTileMap(self.body.box, playerTileCoords.x, playerTileCoords.y))
 	self.body.box:vectorMove(shiftVector)
 	
 	-- check for collisions against the tilemap 
 	-- this is very cheap, it only reverses the player's body.velocity on collision 
 	-- this shouldn't be needed once the collision method below works properly 
-	if (checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)) then self.body.box:scalarMove(-self.body.vel.x, -self.body.vel.y) end
+	if (checkTileMapCollision(self.body.box, playerTileCoords.x, playerTileCoords.y)) then self.body.box:scalarMove(-self.body.vel.x, -self.body.vel.y) end
 	
 	
 	-- runs twice. once for x and once for y. 
 	-- this could be collapsed into one thing, do that later 
 	-- also doesn't work paricularly well.
-	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)
+	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerTileCoords.x, playerTileCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
 		self.body.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end
-	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)
+	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerTileCoords.x, playerTileCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
 		self.body.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end

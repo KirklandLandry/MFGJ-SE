@@ -57,8 +57,30 @@ function generateTileMap(mapObject)
 end 
 
 
-function convertGridToTilemapWorld()
+
+
+function convertGridToTilemapWorld(map)
+	assert(#map%tilesDisplayHeight == 0 and #map[1]%tilesDisplayWidth == 0, "map size not of the proper multiple")
 	
+	local mapList = {}
+	
+	print("split map height: "..#map/tilesDisplayHeight.."split map width: "..#map[1]/tilesDisplayWidth)
+	
+	for i=1,#map/tilesDisplayHeight do 	
+		mapList[i] = {}
+		for j=1,#map[1]/tilesDisplayWidth do 	
+			
+			local currentScreen = {base = {}, enemies = {}} 
+			for y=1,tilesDisplayHeight do
+				currentScreen.base[y] = {}
+				for x=1,tilesDisplayWidth do 
+					currentScreen.base[y][x] = map[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
+				end
+			end
+			mapList[i][j] = currentScreen
+		end
+	end
+	return mapList
 end
 
 
@@ -116,13 +138,23 @@ function generateWorld()
 		end
 	end
 
+	local list = convertGridToTilemapWorld(newCave(10*tilesDisplayWidth, 10*tilesDisplayHeight))
 	world = {}
+	for y = 1, #list do 
+	print("y"..y)
+		world[y] = {}
+		for x = 1, #list[1] do 
+			world[y][x] = list[y][x]
+		end
+	end
+	
+	--[[world = {}
 	for y = 1, tilesDisplayHeight do 
 		world[y] = {}
 		for x = 1, tilesDisplayWidth do 
 			world[y][x] = generateTileMap(mapCodes[y][x])
 		end
-	end
+	end]]
 	print("tilesDisplayWidth = "..tilesDisplayWidth, "tilesDisplayHeight = "..tilesDisplayHeight)
 	print("world generated with size ("..#world[1]..", "..#world..")")
 end
@@ -138,7 +170,7 @@ function loadMap(scaledScreenWidth, scaledScreenHeight)
 	tilesDisplayHeight = math.floor(scaledScreenHeight/globalTileSize) - 1 -- minus 1 to make room for the bottom ui bar
 	
 	generateWorld()
-	assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
+	--assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
 	
 	loadTilebatch()
 end
@@ -157,20 +189,20 @@ end
 -- this is because it's only taking into account x,y (the top right of the box) and ignoring the width/height 
 -- no technical problems with this, just an aesthetic / consistency problem to address later
 
-function checkIfMovedToNextTileMap(box, playerMapX, playerMapY)	
+function checkIfMovedToNextTileMap(box, playerTileX, playerTileY)	
 	local result = Vector:new(0,0)
 	-- first check if they moved to a different tilemap on the world map
-	if playerMapX < 1 and worldX -1 > 0 then 
+	if playerTileX < 1 and worldX -1 > 0 then 
 		result.x = tilesDisplayWidth * globalTileSize
 		worldX = worldX - 1 
-	elseif playerMapX > tilesDisplayWidth and worldX + 1 <= #world[worldY] then 
+	elseif playerTileX > tilesDisplayWidth and worldX + 1 <= #world[worldY] then 
 		result.x = (-tilesDisplayWidth * globalTileSize)
 		worldX = worldX + 1
 	end	
-	if playerMapY < 1 and worldY -1 > 0 then 
+	if playerTileY < 1 and worldY -1 > 0 then 
 		result.y = tilesDisplayHeight * globalTileSize
 		worldY = worldY - 1
-	elseif playerMapY > tilesDisplayHeight and worldY + 1 <= #world then 
+	elseif playerTileY > tilesDisplayHeight and worldY + 1 <= #world then 
 		result.y = -tilesDisplayHeight * globalTileSize
 		worldY = worldY + 1
 	end
@@ -239,12 +271,19 @@ function updateMap(dt, playerAttack)
 	if getKeyPress("d") then worldX = worldX + 1 end 
 	if getKeyPress("w") then worldY = worldY - 1 end 
 	if getKeyPress("s") then worldY = worldY + 1 end 
-
+	-- these these are here to cover for the debug step above
 	if worldX < 1 then worldX = 1 end 
 	if worldY < 1 then worldY = 1 end 
-	if worldX > tilesDisplayWidth then worldX = tilesDisplayWidth end 
-	if worldY > tilesDisplayHeight then worldY = tilesDisplayHeight end 
-
+	if worldX > #world[1] then worldX = #world[1] end 
+	if worldY > #world then worldY = #world end 
+	
+	-- if these fire, something's wrong. trying to go out of bounds
+	assert(worldY >= 1)
+	assert(worldX >= 1)
+	assert(worldY <= #world)
+	assert(worldX <= #world[1])
+	
+	
 	if gameState == GameStates.scrollComplete then 
 		print("map scroll complete")
 		updateTileSetBatch(world[worldY][worldX].base)	

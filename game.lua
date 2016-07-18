@@ -45,7 +45,7 @@ function loadGame(scaleValue)
 	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), player1:getPlayerHeartContainers(), player1:getPlayerHealth())
 end
 
-local screenShiftAmount = 230
+local screenShiftAmount = 260
 --local dtShiftX = 0 
 --local dtShiftY = 0
 local screenShiftX = 0 

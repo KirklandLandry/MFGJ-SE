@@ -28,6 +28,27 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- NOTE: 
+-- designate an open tile in cave for player start position
+-- add enemies back in too 
+-- add in some treasure, floors, dead/win conditions and that's almost a working game
+
+-- NOTE: 
+-- could add in a pause menu that lets you scroll through the tiles of the map you've discovered
+-- so basically, add a map
+
+
+-- NOTE: 
+-- need to add this very important step for cave gen / screen scrolling
+-- right now you can scroll down right into a filled tile
+-- obviously need to prevent this 
+-- you could ...
+-- just not scroll if the next tilmap would put you into a filled tile 
+-- or ...
+-- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled 
+-- realistically...
+-- should do both to be safe
+
 -- NOTE:
 -- add a camera and the ability for larger scrolling areas
 -- get some cool zoom going on
