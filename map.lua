@@ -49,8 +49,10 @@ function generateTileMap(mapObject)
 	end 
 	if mapObject.right then 
 		result.base[5][tilesDisplayWidth] = openTile
-	end 
+	end
 
+	--result.base = newCave(tilesDisplayWidth, tilesDisplayHeight)
+	
 	return result
 end 
 

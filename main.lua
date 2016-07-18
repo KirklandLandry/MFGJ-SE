@@ -12,6 +12,7 @@ require "enemyManager"
 require "timer"
 require "attack"
 require "body"
+require "randGen/cellularAutomataCave"
 
 -- this is the actual physical window size 
 screenWidth = nil
@@ -27,6 +28,10 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- NOTE:
+-- add a camera and the ability for larger scrolling areas
+-- get some cool zoom going on
+
 -- NOTE: 
 -- work on seperating map and collision / enemy management
 
@@ -37,19 +42,12 @@ globalTileSize = 16
 -- also, the player's box should be a bit less than the player sprite probably. it should also be able to change based on 
 -- animation (so a bounding box size / position is linked to a frame)
 
--- NOTE:
--- could enemy and player be collapsed into 1 base type? 
--- most of it is fairly similar and it would make all of the code more generic and 
--- make it easier to work with. Something to consider before things go too far.
-
--- NOTE: 
--- get enemy bounceback working
-
 -- NOTE: 
 -- the structure of stuff has become somewhat wonky 
 -- it's getting kind of weird with bits of collision in map and also in player
 -- also, map handles a lot right now, not just being a map 
 -- it also handles most of the collision stuff and world stuff (enemies/map)
+-- there should probably just be a loop somewhere that get's all active AABB's and checks them against each other.
 
 -- NOTE: 
 -- need to change how tilemap switching works
