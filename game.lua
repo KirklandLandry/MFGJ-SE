@@ -9,19 +9,18 @@
 
 -- have a state for things
 -- menu state or game state or cutscene state. something like that
-directions = {up = "up", down = "down", left = "left", right = "right"}
+Directions = {up = "up", down = "down", left = "left", right = "right"}
  function getRandomDirection()
 	local r = math.random(1,100)
-	--print(r)
-	local result = directions.up 
+	local result = Directions.up 
 	if r <=25 then 
-		result = directions.up 
+		result = Directions.up 
 	elseif r <=50 then 
-		result = directions.down 
+		result = Directions.down 
 	elseif r <= 75 then 
-		result = directions.left
+		result = Directions.left
 	elseif r <= 100 then 
-		result = directions.right
+		result = Directions.right
 	end
 	return result 
  end
@@ -30,16 +29,20 @@ GameStates = {neutral = "neutral", pause = "pause", gameOver = "gameOver", title
 			  scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight",  scrollComplete = "scrollComplete"}
 gameState = nil 
 
-local effects = nil
+MoveStates = {neutral = "neutral", walking = "walking", recoil = "recoil", attacking = "attacking"}
+BodyStates = {neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth"}
+
+local player1 = nil 
+
 function loadGame(scaleValue)
 	gameState = GameStates.neutral
 
-	loadPlayer()	
+	player1 = Player:new(110, 60, 12, 16)
 	loadInput()
 	loadMap(love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
 	-- first 2 functions are in map. they shouldn't really be, should be more general
 	-- 16 is the tile size 
-	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), getPlayerHeartContainers(), getPlayerHealth())
+	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), player1:getPlayerHeartContainers(), player1:getPlayerHealth())
 end
 
 local screenShiftAmount = 230
@@ -52,10 +55,10 @@ function updateGame(dt)
 	if gameState == GameStates.scrollComplete then gameState = GameStates.neutral end
 	
 	if gameState == GameStates.neutral then 
-		updatePlayer(dt)
-		updateMap(dt)
+		player1:update(dt)
+		updateMap(dt, player1:getPlayerAttack())
 		
-		updateUi(dt , getPlayerHeartContainers(), getPlayerHealth())
+		updateUi(dt , player1:getPlayerHeartContainers(), player1:getPlayerHealth())
 	else
 		updateScreenShift(dt)
 		--shiftPlayer(dtShiftX, dtShiftY)
@@ -68,7 +71,10 @@ end
 
 function drawGame()
 	drawTileSetBatch(screenShiftX, screenShiftY)
-	drawPlayer(screenShiftX, screenShiftY)
+	debugDrawCollisionMap()
+	debugDrawPlayerCollisionBounds(player1:getPlayerCoord())
+	
+	player1:drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
 end 
 

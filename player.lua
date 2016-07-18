@@ -1,204 +1,238 @@
-local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth", attacking = "attacking"}
+--local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth", attacking = "attacking"}
 
-local player = {box = AABB:new(110, 60, 12, 16), vel = Vector:new(0,0), heartContainers = 13, currentHealth = 4.50, 
+--[[local player = {body.box = AABB:new(110, 60, 12, 16), body.vel = Vector:new(0,0), maxHealth = 13, body.currentHealth = 4.50, 
 				facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral, 
-				invincibilityTimer = nil, recoilTimer = nil, attack = nil }
+				invincibilityTimer = nil, recoilTimer = nil, attack = nil }]]
+Player = {body = nil, invincibilityTimer = nil, attack = nil, playerQuads = nil,  playerTileset = nil, animationIndex = 1}
+	
+-- this needs to be calculated
+local recoilAmount = 70	
 
-local playerQuads = nil
-local playerTileset = nil
-
--- debug. remove later.
-function getPlayerCoord()
-	return Vector:new(player.box.minVec.x, player.box.minVec.y)
+function Player:new(x, y, width, height)
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	o.body = Body:new(110, 60, 12, 16, 13,4.50, 0.14)
+	
+	o.facingDirection = Directions.down
+	o.moveState = MoveStates.neutral 
+	o.bodyState = BodyStates.neutral
+	
+	o.invincibilityTimer = Timer:new(1, "single")
+	
+	o.attack = Attack:new(0.25, 12)
+	
+	o.playerTilesetImage = love.graphics.newImage("assets/tilesets/player.png")
+	o.playerTilesetImage:setFilter("nearest", "nearest")
+	
+	local tilesetWidth = o.playerTilesetImage:getWidth()
+	local tilesetHeight = o.playerTilesetImage:getHeight()
+	
+	o.playerQuads = {}
+	o.playerQuads.neutral = {}
+	o.playerQuads.neutral[1] = love.graphics.newQuad(0,0,12, globalTileSize, tilesetWidth, tilesetHeight)
+	o.playerQuads.neutral[2] = love.graphics.newQuad(12*1,0,12, globalTileSize, tilesetWidth, tilesetHeight)
+	o.playerQuads.neutral[3] = love.graphics.newQuad(12*2,0,12, globalTileSize, tilesetWidth, tilesetHeight)
+	o.playerQuads.neutral[4] = love.graphics.newQuad(12*3,0,12, globalTileSize, tilesetWidth, tilesetHeight)
+	
+	return o
 end
 
-function loadPlayer() 
-	player.facingDirection = directions.down
 
-	player.invincibilityTimer = Timer:new(1, "single")
-	player.recoilTimer = Timer:new(0.14, "single")
+function Player:update(dt)	
+	local topLeft = self:getTopLeft()
+	local bottomRight = self:getBottomRight()
 	
-	player.attack = Attack:new(0.25, 12)
-	
-	playerTilesetImage = love.graphics.newImage("assets/tilesets/player.png")
-	playerTilesetImage:setFilter("nearest", "nearest")
-	
-	playerQuads = {}
-	playerQuads.neutral = {}
-	playerQuads.neutral[1] = love.graphics.newQuad(0,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
-	playerQuads.neutral[2] = love.graphics.newQuad(12*1,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
-	playerQuads.neutral[3] = love.graphics.newQuad(12*2,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
-	playerQuads.neutral[4] = love.graphics.newQuad(12*3,0,12, globalTileSize, playerTilesetImage:getWidth(), playerTilesetImage:getHeight())
-end 
+	-- debug change health. remove later
+	if getKeyPress("q") then self.body.currentHealth = self.body.currentHealth - 0.25 end 
+	if getKeyPress("e") then self.body.currentHealth = self.body.currentHealth + 0.25 end 	
 
-local animationIndex = 1
-
-
--- this needs to be calculated
-local recoilAmount = 70
-local recoilX = 10 
-local recoilY = 10
-function updatePlayer(dt)
+	local attackButtonPressed = getKeyPress("h")
 	
-	if player.bodyState == PlayerStates.invincible then 
-		if player.invincibilityTimer:isComplete(dt) then 
-			player.bodyState = PlayerStates.neutral
+	if self.body.bodyState == BodyStates.invincible then 
+		if self.invincibilityTimer:isComplete(dt) then 
+			self.body.bodyState = BodyStates.neutral
 		end
 	end
 	
-	if player.moveState == PlayerStates.recoil then 
-		if player.recoilTimer:isComplete(dt) then 
-			if player.moveState == PlayerStates.recoil then 
-				player.moveState = PlayerStates.neutral 
+	if self.body.moveState == MoveStates.recoil then 
+		if self.body.recoilTimer:isComplete(dt) then 
+			if self.body.moveState == MoveStates.recoil then 
+				self.body.moveState = MoveStates.neutral 
 			end
 		end	
 		-- move the player
-		player.box:scalarMove(recoilX * dt, recoilY * dt)
-	else 
-		local impulse = 40
-		player.vel.x = 0
-		player.vel.y = 0
-		
-		if getKeyPress("h") and player.moveState ~= PlayerStates.attacking then 
-			-- attack
-			player.moveState = PlayerStates.attacking
-			player.attack:reset()
-			
-			if player.facingDirection == directions.right then 
-				player.attack.box = AABB:new(player.box.maxVec.x, player.box.minVec.y,16,16)
-			elseif player.facingDirection == directions.left then 
-				player.attack.box = AABB:new(player.box.minVec.x - 16, player.box.minVec.y,16,16)
-			elseif player.facingDirection == directions.up then 
-				player.attack.box = AABB:new(player.box.minVec.x, player.box.minVec.y - 16,16,16)
-			elseif player.facingDirection == directions.down then 
-				player.attack.box = AABB:new(player.box.minVec.x, player.box.maxVec.y,16,16)
-			end	
-		end
-		
-		if player.moveState ~= PlayerStates.attacking then 
-			if getKeyDown("up") then 
-				player.vel.y = -impulse * dt
-				player.facingDirection = directions.up
-				animationIndex = 4
-			elseif  getKeyDown("down") then 
-				player.vel.y = impulse * dt
-				player.facingDirection = directions.down
-				animationIndex = 1
-			end	
-			if getKeyDown("left") then 
-				player.vel.x = -impulse * dt
-				player.facingDirection = directions.left
-				animationIndex = 2
-			elseif getKeyDown("right") then 
-				player.vel.x = impulse * dt
-				player.facingDirection = directions.right
-				animationIndex = 3
-			end
-		end
-		
-		-- debug change health 
-		if getKeyPress("q") then player.currentHealth = player.currentHealth - 0.25 end 
-		if getKeyPress("e") then player.currentHealth = player.currentHealth + 0.25 end 	
-
-		if player.moveState == PlayerStates.attacking then 
-			if player.attack:isComplete() then 
-				player.moveState = PlayerStates.neutral
-			end
-		else 
-			-- move the player
-			player.box:scalarMove(player.vel.x, player.vel.y)
-		end 
+		self.body.box:scalarMove(self.body.recoilX * dt, self.body.recoilY * dt)
+	end 
+	
+	local impulse = 40
+	self.body.vel.x = 0
+	self.body.vel.y = 0
+	
+	local inputDirectionVector = Vector:new(0,0)
+	if getKeyDown("up") then 
+		inputDirectionVector.y = -1 
+	elseif getKeyDown("down") then 
+		inputDirectionVector.y = 1 
+	end
+	if getKeyDown("left") then 
+		inputDirectionVector.x = -1 
+	elseif getKeyDown("right") then 
+		inputDirectionVector.x = 1 
 	end
 	
-	local collisionInfo = playerVsEnemiesCollisions(player.box)
-	-- check for collisions with enemies on the current tilemap
-	if collisionInfo ~= nil and player.moveState ~= PlayerStates.recoil and player.bodyState ~= PlayerStates.invincible then 	
-		-- draw a recoil animation
-		player.box:scalarMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.y * collisionInfo.penetration)
+	if attackButtonPressed and self.body.moveState ~= MoveStates.attacking and self.body.moveState ~= MoveStates.recoil then 
+		-- attack
+		self.body.moveState = MoveStates.attacking
+		self.attack:reset()
 		
-		player.moveState = PlayerStates.recoil
-		player.bodyState = PlayerStates.invincible
-		
-		player.invincibilityTimer:reset()
-		player.recoilTimer:reset()
-		
-		recoilX = collisionInfo.normal.x * recoilAmount
-		recoilY = collisionInfo.normal.y * recoilAmount
+		if self.body.facingDirection == Directions.right then 
+			self.attack.box = AABB:new(bottomRight.x, topLeft.y,16,16)
+		elseif self.body.facingDirection == Directions.left then 
+			self.attack.box = AABB:new(topLeft.x - 16, topLeft.y,16,16)
+		elseif self.body.facingDirection == Directions.up then 
+			self.attack.box = AABB:new(topLeft.x, topLeft.y - 16,16,16)
+		elseif self.body.facingDirection == Directions.down then 
+			self.attack.box = AABB:new(topLeft.x, bottomRight.y,16,16)
+		end	
+	end
+	
+	if self.body.moveState ~= MoveStates.attacking then 
+		if inputDirectionVector.y == -1 then 
+			self.body.vel.y = -impulse * dt
+			self.body.facingDirection = Directions.up
+			self.animationIndex = 4
+		elseif  inputDirectionVector.y == 1 then 
+			self.body.vel.y = impulse * dt
+			self.body.facingDirection = Directions.down
+			self.animationIndex = 1
+		end	
+		if inputDirectionVector.x == -1  then 
+			self.body.vel.x = -impulse * dt
+			self.body.facingDirection = Directions.left
+			self.animationIndex = 2
+		elseif inputDirectionVector.x == 1  then 
+			self.body.vel.x = impulse * dt
+			self.body.facingDirection = Directions.right
+			self.animationIndex = 3
+		end
+	end
 
-		player.currentHealth = player.currentHealth - 0.25
+	if self.body.moveState == MoveStates.attacking then 
+		if self.attack:isComplete() then 
+			self.body.moveState = MoveStates.neutral
+		end
+	elseif self.body.moveState ~= MoveStates.recoil then 
+		-- move the player
+		self.body.box:scalarMove(self.body.vel.x, self.body.vel.y)
+	end 
+	
+	local collisionInfo = self.body:checkEntityCollisions()
+	-- check for collisions with enemies on the current tilemap
+	if collisionInfo ~= nil and self.body.moveState ~= MoveStates.recoil and self.body.bodyState ~= BodyStates.invincible then 	
+		self.body.box:scalarMove(collisionInfo.normal.x * collisionInfo.penetration, collisionInfo.normal.y * collisionInfo.penetration)
+		
+		self.body.moveState = MoveStates.recoil
+		self.body.bodyState = BodyStates.invincible
+		
+		self.invincibilityTimer:reset()
+		self.body.recoilTimer:reset()
+		
+		self.body.recoilX = collisionInfo.normal.x * recoilAmount
+		self.body.recoilY = collisionInfo.normal.y * recoilAmount
+
+		self.body.currentHealth = self.body.currentHealth - 0.25
 	end
 	
 	-- get the player's tile coordinates
-	local playerMapCoords = getTileCoordinate(player.box.minVec.x, player.box.minVec.y)
+	local playerMapCoords = getTileCoordinate(topLeft.x, topLeft.y)
 	
 	-- check for moving to the next tilemap
-	local shiftVector = (checkIfMovedToNextTileMap(player.box, playerMapCoords.x, playerMapCoords.y))
-	player.box:vectorMove(shiftVector)
+	local shiftVector = (checkIfMovedToNextTileMap(self.body.box, playerMapCoords.x, playerMapCoords.y))
+	self.body.box:vectorMove(shiftVector)
 	
 	-- check for collisions against the tilemap 
-	-- this is very cheap, it only reverses the player's velocity on collision 
+	-- this is very cheap, it only reverses the player's body.velocity on collision 
 	-- this shouldn't be needed once the collision method below works properly 
-	if (checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)) then player.box:scalarMove(-player.vel.x, -player.vel.y) end
+	if (checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)) then self.body.box:scalarMove(-self.body.vel.x, -self.body.vel.y) end
 	
 	
 	-- runs twice. once for x and once for y. 
 	-- this could be collapsed into one thing, do that later 
-	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
+	-- also doesn't work paricularly well.
+	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
-		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+		self.body.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end
-	
-	local tilemapCorrectionInfo = checkTileMapCollision(player.box, playerMapCoords.x, playerMapCoords.y)
+	local tilemapCorrectionInfo = checkTileMapCollision(self.body.box, playerMapCoords.x, playerMapCoords.y)
 	if tilemapCorrectionInfo ~= nil then 
-		player.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
+		self.body.box:scalarMove(tilemapCorrectionInfo.normal.x * tilemapCorrectionInfo.penetration, tilemapCorrectionInfo.normal.y * tilemapCorrectionInfo.penetration)
 	end
-	
-
 end
 
-function getPlayerAttack()
-	if player.moveState == PlayerStates.attacking then 
-		return player.attack
+
+function Player:drawPlayer(screenShiftX, screenShiftY)
+
+	if self.body.bodyState == BodyStates.invincible then 
+		love.graphics.setColor(200,200,200,170)
+	end
+
+	if gameState == GameStates.neutral or 
+	math.floor(screenShiftX) == math.floor(self.body.box.minVec.x) or 
+	math.floor(screenShiftY) == math.floor(self.body.box.minVec.y) then
+	
+		love.graphics.draw(self.playerTilesetImage, self.playerQuads.neutral[self.animationIndex], self.body.box.minVec.x, self.body.box.minVec.y)
+	elseif gameState == GameStates.scrollingRight then 
+		love.graphics.draw(self.playerTilesetImage, self.playerQuads.neutral[self.animationIndex], baseScreenWidth + screenShiftX, self.body.box.minVec.y)
+	elseif gameState == GameStates.scrollingLeft then 
+		love.graphics.draw(self.playerTilesetImage, self.playerQuads.neutral[self.animationIndex], screenShiftX, self.body.box.minVec.y)
+	elseif gameState == GameStates.scrollingUp then 
+		love.graphics.draw(self.playerTilesetImage, self.playerQuads.neutral[self.animationIndex], self.body.box.minVec.x, screenShiftY)
+	elseif gameState == GameStates.scrollingDown then 
+		love.graphics.draw(self.playerTilesetImage, self.playerQuads.neutral[self.animationIndex], self.body.box.minVec.x, baseScreenHeight - globalTileSize + screenShiftY)	
+	end
+	
+	-- put in a sword anim or something 
+	if self.body.moveState == MoveStates.attacking then 
+		love.graphics.rectangle("fill", self.attack.box.minVec.x, self.attack.box.minVec.y, self.attack.box.width, self.attack.box.height)
+	end 
+		
+	love.graphics.setColor(255,255,255)
+	self.body.box:drawCorners()
+end
+
+
+
+function Player:getPlayerHealth()
+	return self.body.currentHealth
+end
+
+-- getPlayermaxHealth
+function Player:getPlayerHeartContainers()
+	return self.body.maxHealth
+end
+
+
+function Player:getPlayerAttack()
+	if self.body.moveState == MoveStates.attacking then 
+		return self.attack
 	else 
 		return nil 
 	end
 end
 
-
-function drawPlayer(screenShiftX, screenShiftY)
-
-	if player.bodyState == PlayerStates.invincible then 
-		love.graphics.setColor(200,200,200,170)
-	end
-
-	if gameState == GameStates.neutral or 
-	math.floor(screenShiftX) == math.floor(player.box.minVec.x) or 
-	math.floor(screenShiftY) == math.floor(player.box.minVec.y) then
-	
-		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, player.box.minVec.y)
-	elseif gameState == GameStates.scrollingRight then 
-		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], baseScreenWidth + screenShiftX, player.box.minVec.y)
-	elseif gameState == GameStates.scrollingLeft then 
-		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], screenShiftX, player.box.minVec.y)
-	elseif gameState == GameStates.scrollingUp then 
-		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, screenShiftY)
-	elseif gameState == GameStates.scrollingDown then 
-		love.graphics.draw(playerTilesetImage, playerQuads.neutral[animationIndex], player.box.minVec.x, baseScreenHeight - globalTileSize + screenShiftY)	
-	end
-	
-	-- put in a sword anim or something 
-	if player.moveState == PlayerStates.attacking then 
-		love.graphics.rectangle("fill", player.attack.box.minVec.x, player.attack.box.minVec.y, player.attack.box.width, player.attack.box.height)
-	end 
-		
-	love.graphics.setColor(255,255,255)
-	player.box:drawCorners()
+-- debug. remove later.
+function Player:getPlayerCoord()
+	return Vector:new(self.body.box.minVec.x, self.body.box.minVec.y)
 end
 
-function getPlayerHealth()
-	return player.currentHealth
+function Player:getTopLeft()
+	return self.body.box:getTopLeft()
 end
 
-function getPlayerHeartContainers()
-	return player.heartContainers
+function Player:getBottomRight()
+	return self.body.box:getBottomRight()
 end
+
+
+

@@ -29,6 +29,15 @@ function AABB:scalarMove(xAdd, yAdd)
 	self.maxVec:scalarAdd(xAdd, yAdd)
 end
 
+
+function AABB:getTopLeft()
+	return self.minVec
+end
+
+function AABB:getBottomRight()
+	return self.maxVec
+end
+
 -- used for checking collision against the tilemap vertically.
 -- used to offset the minimum y by 70% of the sprite so it'll check 
 -- for collisions using the bottom 30% of the sprite

@@ -1,4 +1,4 @@
--- should these 3 go in the game file?
+
 local tilesDisplayWidth = nil
 local tilesDisplayHeight = nil
 
@@ -210,8 +210,9 @@ function checkTileMapCollision(box, tileX, tileY)
 	return result 
 end
 
-
-function playerVsEnemiesCollisions(playerAABB)
+-- change to a generic "all entities collisions check" or something
+-- make it check against every other AABB except itself
+function AABBvsEnemiesCollisions(playerAABB)
 	assert(playerAABB ~= nil, "don't pass an empty arg")
 	
 	local result = nil 
@@ -230,7 +231,7 @@ function getTileCoordinate(x, y)
 	return Vector:new(math.floor(x / globalTileSize) + 1, math.floor(y / globalTileSize) + 1)
 end
 
-function updateMap(dt)
+function updateMap(dt, playerAttack)
 	-- debug. remove later
 	if getKeyPress("a") then worldX = worldX - 1 end 
 	if getKeyPress("d") then worldX = worldX + 1 end 
@@ -249,19 +250,18 @@ function updateMap(dt)
 	
 	local length = #world[prevWorldY][prevWorldX].enemies
 	for i=length,1,-1  do 
-		world[prevWorldY][prevWorldX].enemies[i]:update(dt)
-		
+		world[prevWorldY][prevWorldX].enemies[i]:update(dt)	
 		if not world[prevWorldY][prevWorldX].enemies[i]:isInvincible() then 
 			-- should be getting a list once the playerattack is changed to a list 
 			-- of currently active player attacks
-			local playerAttack = getPlayerAttack()
+			--local playerAttack = getPlayerAttack()
 			if playerAttack ~= nil then 			
 				local enemyAABB = world[worldY][worldX].enemies[i]:getAABB()
 				local collisionResult = AABBvsAABBDetectionAndResolution(enemyAABB, playerAttack.box)			
 				if collisionResult ~= nil then 
 					-- make a variant object called attack or something that's and AABB and 
 					-- also contains damage and element info and stuff like that.
-					world[worldY][worldX].enemies[i]:changeHealth(-playerAttack.damage)
+					world[worldY][worldX].enemies[i]:changeHealth(-playerAttack.damage, collisionResult.normal)
 					world[worldY][worldX].enemies[i].invincibilityFrames = playerAttack:remainingFrames()
 					
 					if world[worldY][worldX].enemies[i]:getHealth() <= 0 then 
@@ -280,16 +280,16 @@ function updateMap(dt)
 		
 		if worldX > prevWorldX then 
 			gameState = GameStates.scrollingRight
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.right)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.right)
 		elseif worldX < prevWorldX then 
 			gameState = GameStates.scrollingLeft
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.left)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.left)
 		elseif worldY > prevWorldY then 
 			gameState = GameStates.scrollingDown
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.down)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.down)
 		elseif worldY < prevWorldY then 
 			gameState = GameStates.scrollingUp
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, directions.up)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.up)
 		else 
 			-- this should never happen
 			updateTileSetBatch(world[worldY][worldX].base)
@@ -316,14 +316,14 @@ function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPla
 	local xOffset = 0 
 	local yOffset = 0
 	if secondTileMapToDraw ~= nil then 
-		assert(secondTileMapPlacement ~= nil and (secondTileMapPlacement == directions.up or secondTileMapPlacement == directions.down or secondTileMapPlacement == directions.left or secondTileMapPlacement == directions.right))
-		if secondTileMapPlacement == directions.up then 
+		assert(secondTileMapPlacement ~= nil and (secondTileMapPlacement == Directions.up or secondTileMapPlacement == Directions.down or secondTileMapPlacement == Directions.left or secondTileMapPlacement == Directions.right))
+		if secondTileMapPlacement == Directions.up then 
 			yOffset = -baseScreenHeight + globalTileSize
-		elseif secondTileMapPlacement == directions.down then
+		elseif secondTileMapPlacement == Directions.down then
 			yOffset = baseScreenHeight - globalTileSize
-		elseif secondTileMapPlacement == directions.left then
+		elseif secondTileMapPlacement == Directions.left then
 			xOffset = -baseScreenWidth
-		elseif secondTileMapPlacement == directions.right then
+		elseif secondTileMapPlacement == Directions.right then
 			xOffset = baseScreenWidth
 		end
 		-- the spritebatch will be twice as big (drawing two screens), so you need to tell it that (so *2 the size)
@@ -352,11 +352,7 @@ function drawTileSetBatch(screenShiftX, screenShiftY)
 			world[prevWorldY][prevWorldX].enemies[i]:draw(i)
 		end
 	end
-	
-	debugDrawCollisionMap()
-	debugDrawPlayerCollisionBounds()	
 end
-
 
 function debugDrawCollisionMap()
 	for y=1,tilesDisplayHeight do
@@ -372,10 +368,9 @@ function debugDrawCollisionMap()
 	end 
 end
 
-
 -- just debug to show which tiles are being checked for player collisions 
-function debugDrawPlayerCollisionBounds()
-	local playerCoord = getPlayerCoord()
+function debugDrawPlayerCollisionBounds(playerCoord)
+	--local playerCoord = getPlayerCoord()
 	local tv = getTileCoordinate(playerCoord.x, playerCoord.y)
 	local tileX = tv.x 
 	local tileY = tv.y 

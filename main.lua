@@ -11,6 +11,7 @@ require "collision"
 require "enemyManager"
 require "timer"
 require "attack"
+require "body"
 
 -- this is the actual physical window size 
 screenWidth = nil
@@ -46,7 +47,6 @@ globalTileSize = 16
 
 -- NOTE: 
 -- the structure of stuff has become somewhat wonky 
--- player should be an object that gets created which lets it be handled more easily
 -- it's getting kind of weird with bits of collision in map and also in player
 -- also, map handles a lot right now, not just being a map 
 -- it also handles most of the collision stuff and world stuff (enemies/map)
@@ -81,9 +81,6 @@ globalTileSize = 16
 
 -- NOTE: 
 -- try adding a minimap?
-
--- NOTE: 
--- don't start enemies too close together. also get enemy-enemy collision detection/resolution going
 
 -- NOTE: 
 -- should make a generic spritebatch loop. can't have one for map, but everything else should be generic enough
