@@ -50,8 +50,6 @@ function generateTileMap(mapObject)
 	if mapObject.right then 
 		result.base[5][tilesDisplayWidth] = openTile
 	end
-
-	--result.base = newCave(tilesDisplayWidth, tilesDisplayHeight)
 	
 	return result
 end 
@@ -71,6 +69,9 @@ function convertGridToTilemapWorld(map)
 		for j=1,#map[1]/tilesDisplayWidth do 	
 			
 			local currentScreen = {base = {}, enemies = {}} 
+			for i=1,4 do 
+				currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
+			end
 			for y=1,tilesDisplayHeight do
 				currentScreen.base[y] = {}
 				for x=1,tilesDisplayWidth do 
@@ -138,7 +139,40 @@ function generateWorld()
 		end
 	end
 
-	local list = convertGridToTilemapWorld(newCave(10*tilesDisplayWidth, 10*tilesDisplayHeight))
+	world = {}
+	for y = 1, tilesDisplayHeight do 
+		world[y] = {}
+		for x = 1, tilesDisplayWidth do 
+			world[y][x] = generateTileMap(mapCodes[y][x])
+		end
+	end
+	print("tilesDisplayWidth = "..tilesDisplayWidth, "tilesDisplayHeight = "..tilesDisplayHeight)
+	print("world generated with size ("..#world[1]..", "..#world..")")
+end
+
+local startingPosition = {worldPos = nil, tilePos = nil}
+function getPlayerStartingPosition()
+	return startingPosition.tilePos
+end 
+
+function generateCaveWorld()
+
+	-- NOTE: 
+	-- structurally, I think the only job of cellularAutomataCave.lua should be to generate the caves. 
+	-- once that's done, this part can populate them with enemies, player start, treasure, traps(fall to prev floor,spike traps, bombs), mob rooms, etc...
+	-- it should tell you the biggest rooms / the diff regions so you can choose positions from those areas 
+	-- maybe also return a list of open tiles that you can random from 
+	-- player spawn rule should be that it needs a square around it of empty space
+	-- * * *
+	-- * p *
+	-- * * *
+
+	-- TODO: 
+	-- place a number of enemies relative to a rooms size
+	-- if it's a really big empty space, occasionally make it a trap room you can't leave 
+	-- where a treasure spawns at the end 
+
+	local list = convertGridToTilemapWorld(newCave(10*tilesDisplayWidth, 10*tilesDisplayHeight, tilesDisplayWidth, tilesDisplayHeight))
 	world = {}
 	for y = 1, #list do 
 	print("y"..y)
@@ -148,29 +182,42 @@ function generateWorld()
 		end
 	end
 	
-	--[[world = {}
-	for y = 1, tilesDisplayHeight do 
-		world[y] = {}
-		for x = 1, tilesDisplayWidth do 
-			world[y][x] = generateTileMap(mapCodes[y][x])
-		end
-	end]]
+	-- just for now. this is bad.
+	local findingStartPosition = true 
+	local safeGuard = 0 
+	while findingStartPosition do 
+		startingPosition.worldPos = Vector:new(math.random(1,#world[1]),math.random(1,#world))
+		startingPosition.tilePos = Vector:new(math.random(2,tilesDisplayWidth-1), math.random(2, tilesDisplayHeight-1))
+		print(safeGuard)
+		if world[startingPosition.worldPos.y][startingPosition.worldPos.x].base[startingPosition.tilePos.y][startingPosition.tilePos.x] == openTile then 
+			findingStartPosition = false 
+			print(startingPosition.tilePos.x, startingPosition.tilePos.y)
+		end	
+		safeGuard = safeGuard + 1 
+		assert(safeGuard < 20, "finding a player starting position isn't working")
+	end
+
 	print("tilesDisplayWidth = "..tilesDisplayWidth, "tilesDisplayHeight = "..tilesDisplayHeight)
 	print("world generated with size ("..#world[1]..", "..#world..")")
 end
 
-
 function loadMap(scaledScreenWidth, scaledScreenHeight)
-	worldX = 1 
-	worldY = 1
+
+	tilesDisplayWidth = math.floor(scaledScreenWidth/globalTileSize)
+	tilesDisplayHeight = math.floor(scaledScreenHeight/globalTileSize) - 1 -- minus 1 to make room for the bottom ui bar
+
+	--generateWorld()
+	generateCaveWorld()
+	--assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
+
+	worldX = startingPosition.worldPos.x 
+	worldY = startingPosition.worldPos.y
 	prevWorldX = worldX
 	prevWorldY = worldY
 	
-	tilesDisplayWidth = math.floor(scaledScreenWidth/globalTileSize)
-	tilesDisplayHeight = math.floor(scaledScreenHeight/globalTileSize) - 1 -- minus 1 to make room for the bottom ui bar
+
 	
-	generateWorld()
-	--assert(#world == tilesDisplayHeight and #world[1] == tilesDisplayWidth, "world not initialized properly")
+
 	
 	loadTilebatch()
 end

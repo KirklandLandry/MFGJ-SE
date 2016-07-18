@@ -12,7 +12,7 @@ function Player:new(x, y, width, height)
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
-	o.body = Body:new(110, 60, 12, 16, 13,4.50, 0.14)
+	o.body = Body:new(x, y, width, height, 13,4.50, 0.14)
 	
 	o.facingDirection = Directions.down
 	o.moveState = MoveStates.neutral 

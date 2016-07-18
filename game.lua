@@ -37,9 +37,13 @@ local player1 = nil
 function loadGame(scaleValue)
 	gameState = GameStates.neutral
 
-	player1 = Player:new(110, 60, 12, 16)
-	loadInput()
+	-- has to happen first.
 	loadMap(love.graphics.getWidth() / scaleValue, love.graphics.getHeight() / scaleValue)
+
+	
+	local playerPos = getPlayerStartingPosition()
+	player1 = Player:new((playerPos.x * globalTileSize)+(globalTileSize/2), (playerPos.y * globalTileSize)+(globalTileSize/2), 12, 16)
+	loadInput()
 	-- first 2 functions are in map. they shouldn't really be, should be more general
 	-- 16 is the tile size 
 	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), player1:getPlayerHeartContainers(), player1:getPlayerHealth())

@@ -4,17 +4,16 @@ local deathLimit = 3
 local birthLimit = 4
 local numberOfSimulationSteps = 16
 
-
 local empty = 1
 local filled = 2
 	
-function newCave(width, height, _chanceToStartAlive)
+function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceToStartAlive)
 	chanceToStartAlive = _chanceToStartAlive or 0.35
 	
 	local map = fillRandomly(width, height, true)
 	
 	for i=1,numberOfSimulationSteps do 
-		map = doSimulationStep(map)
+		map = doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 	end
 	
 	printMap(map)
@@ -54,7 +53,7 @@ function fillRandomly(width, height, giveBorder)
 	return map
 end
 
-function doSimulationStep(map)
+function doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 	local result = copyMap(map)
 	for y=1,#result do 	
 		for x=1,#result[1] do 		
@@ -72,6 +71,26 @@ function doSimulationStep(map)
 					result[y][x] = empty
 				end
 			end
+			
+			
+			-- this part check if the tile that would be on the next or previous screen is filled 
+			-- if then fills the one that would be on the current screen 
+			-- this makes it so that you should never try to scroll to the next screen and be met with a filled tile out of nowhere 
+			-- makes it easier to navigate 
+			if x%tilesDisplayWidth == 0 and x < #map[1] and result[y][x+1] == filled then 
+				result[y][x] = filled
+			end	
+			if x%(tilesDisplayWidth+1) == 0 and x < #map[1] and result[y][x-1] == filled then 
+				result[y][x] = filled
+			end
+			
+			if y%tilesDisplayHeight == 0 and y < #map and result[y+1][x] == filled then 
+				result[y][x] = filled
+			end			
+			if y%(tilesDisplayHeight+1) == 0 and y < #map and result[y-1][x] == filled then 
+				result[y][x] = filled
+			end
+			
 		end
 	end
 	

@@ -28,6 +28,10 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- WARNING: 
+-- there's a discrepancy between the tiles on screen and the cave generated I think 
+-- look at the map player start position code 
+
 -- NOTE: 
 -- designate an open tile in cave for player start position
 -- add enemies back in too 
@@ -45,9 +49,13 @@ globalTileSize = 16
 -- you could ...
 -- just not scroll if the next tilmap would put you into a filled tile 
 -- or ...
--- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled 
+-- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled (did this and I believe it worked)
 -- realistically...
 -- should do both to be safe
+
+-- NOTE:
+-- should maybe seperate the map into a collision layer and tile layer. yes, do this.
+
 
 -- NOTE:
 -- add a camera and the ability for larger scrolling areas
@@ -95,8 +103,6 @@ globalTileSize = 16
 -- interactable objects and their states
 -- multiple layers / height
 
--- NOTE:
--- should maybe seperate the map into a collision layer and tile layer. yes, do this.
 
 -- NOTE: 
 -- try adding a minimap?
