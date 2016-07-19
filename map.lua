@@ -70,7 +70,7 @@ function convertGridToTilemapWorld(map)
 			
 			local currentScreen = {base = {}, enemies = {}} 
 			for i=1,4 do 
-				--currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
+				currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
 			end
 			for y=1,tilesDisplayHeight do
 				currentScreen.base[y] = {}

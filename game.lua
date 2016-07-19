@@ -4,11 +4,8 @@
 -- and here for more info https://love2d.org/forums/viewtopic.php?t=80354
 
 
--- scale value should be decided based on screen size
 -- should be able to set screen resolutions by menu (multiples of 160x144)
 
--- have a state for things
--- menu state or game state or cutscene state. something like that
 Directions = {up = "up", down = "down", left = "left", right = "right"}
  function getRandomDirection()
 	local r = math.random(1,100)
@@ -27,12 +24,14 @@ Directions = {up = "up", down = "down", left = "left", right = "right"}
 
 GameStates = {neutral = "neutral", pause = "pause", gameOver = "gameOver", title = "title",
 			  scrollingUp = "scrollingUp", scrollingDown = "scrollingDown", scrollingLeft = "scrollingLeft", scrollingRight = "scrollingRight",  scrollComplete = "scrollComplete"}
-gameState = nil 
 
+
+-- should recoil just be made a bool in body since it overrides all other states?
 MoveStates = {neutral = "neutral", walking = "walking", recoil = "recoil", attacking = "attacking"}
 BodyStates = {neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth"}
 
 local player1 = nil 
+gameState = nil 
 
 function loadGame(scaleValue)
 	gameState = GameStates.neutral
@@ -42,6 +41,7 @@ function loadGame(scaleValue)
 
 	
 	local playerPos = getPlayerStartingPosition()
+	-- -1 because, while tables and everything will start at 1, the map physically starts at 0,0
 	player1 = Player:new(((playerPos.x-1) * globalTileSize), ((playerPos.y-1) * globalTileSize), 12, 16)
 	loadInput()
 	-- first 2 functions are in map. they shouldn't really be, should be more general
@@ -55,10 +55,20 @@ local screenShiftAmount = 260
 local screenShiftX = 0 
 local screenShiftY = 0
 
+local gameOverFade = 0
+
 function updateGame(dt)
 	if gameState == GameStates.scrollComplete then gameState = GameStates.neutral end
 	
-	if gameState == GameStates.neutral then 
+	if gameState == GameStates.gameOver then 
+		gameOverFade = gameOverFade + (dt*8)
+		gameOverFade = math.clamp(gameOverFade, 1)
+		if getKeyPress("r") then 
+			gameState = GameStates.neutral
+			gameOverFade = 0
+			loadGame(4)
+		end	
+	elseif gameState == GameStates.neutral then 
 		player1:update(dt)
 		updateMap(dt, player1:getPlayerAttack())
 		
@@ -80,6 +90,14 @@ function drawGame()
 	
 	player1:drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
+	
+	if gameState == GameStates.gameOver then 		
+		love.graphics.setColor(0,0,0,gameOverFade * 255)
+		love.graphics.rectangle("fill", 0,0,baseScreenWidth, baseScreenHeight)
+		love.graphics.setColor(255,0,0,gameOverFade * 255)
+		love.graphics.print("You ded, fam\nr to restart", 40, 50)
+		love.graphics.setColor(255,255,255,255)
+	end
 end 
 
 -- idea for shifting the player

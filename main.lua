@@ -28,12 +28,8 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
--- WARNING: 
--- there's a discrepancy between the tiles on screen and the cave generated I think 
--- look at the map player start position code 
 
 -- NOTE: 
--- designate an open tile in cave for player start position
 -- add enemies back in too 
 -- add in some treasure, floors, dead/win conditions and that's almost a working game
 
@@ -49,7 +45,7 @@ globalTileSize = 16
 -- you could ...
 -- just not scroll if the next tilmap would put you into a filled tile 
 -- or ...
--- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled (did this and I believe it worked)
+-- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled (done, fully functional)
 -- realistically...
 -- should do both to be safe
 
@@ -158,8 +154,17 @@ function math.sign(x)
 		return 0
 	end
 end
+
 function math.round(num, idp)
 	local mult = 10^(idp or 0)
 	return math.floor(num * mult + 0.5) / mult
+end
+
+function math.clamp(num,maxNum)
+	if num >= maxNum then 
+		return maxNum 
+	else 
+		return num 
+	end
 end
 -------------------------------------------------------

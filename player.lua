@@ -1,8 +1,4 @@
---local PlayerStates = {walking = "walking", recoil = "recoil", neutral = "neutral", invincible = "invincible", dead = "dead", lowHealth = "lowHealth", attacking = "attacking"}
 
---[[local player = {body.box = AABB:new(110, 60, 12, 16), body.vel = Vector:new(0,0), maxHealth = 13, body.currentHealth = 4.50, 
-				facingDirection = nil, moveState = PlayerStates.neutral, bodyState = PlayerStates.neutral, 
-				invincibilityTimer = nil, recoilTimer = nil, attack = nil }]]
 Player = {body = nil, invincibilityTimer = nil, attack = nil, playerQuads = nil,  playerTileset = nil, animationIndex = 1}
 	
 -- this needs to be calculated
@@ -12,7 +8,7 @@ function Player:new(x, y, width, height)
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
-	o.body = Body:new(x, y, width, height, 13,4.50, 0.14)
+	o.body = Body:new(x, y, width, height, 3,0.25, 0.14)
 	
 	o.facingDirection = Directions.down
 	o.moveState = MoveStates.neutral 
@@ -64,6 +60,10 @@ function Player:update(dt)
 		-- move the player
 		self.body.box:scalarMove(self.body.recoilX * dt, self.body.recoilY * dt)
 	end 
+	
+	if getKeyPress("y") then 
+		self.body.maxHealth = self.body.maxHealth + 1 
+	end
 	
 	local impulse = 40
 	self.body.vel.x = 0
@@ -142,6 +142,11 @@ function Player:update(dt)
 		self.body.recoilY = collisionInfo.normal.y * recoilAmount
 
 		self.body.currentHealth = self.body.currentHealth - 0.25
+	end
+	
+	
+	if self.body.currentHealth <= 0 then 
+		gameState = GameStates.gameOver
 	end
 	
 	-- get the player's tile coordinates

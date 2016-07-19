@@ -28,7 +28,8 @@ end
 			end
 		end	
 		self.body.box:scalarMove(self.body.recoilX * dt, self.body.recoilY * dt)
-	elseif self.moveTimer:isComplete(dt) then 
+	end
+	if self.moveTimer:isComplete(dt) then 
 		if self.body.moveState == MoveStates.neutral then 
 			self.body.moveState = MoveStates.walking
 			self.body.facingDirection = getRandomDirection()

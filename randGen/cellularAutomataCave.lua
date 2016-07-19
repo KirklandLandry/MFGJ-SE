@@ -12,6 +12,7 @@ local filled = 2
 -- flood fill to remove any filled pieces <= 2
 -- flood fill to remove and regions <= n (n==12 is the most common smallest region, but that's still viable (perfect spot to hide treasure). maybe remove < 6 or < 8)
 -- ensure all regions are joined
+-- treasure needs to go on an edge 
 
 	
 function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceToStartAlive)

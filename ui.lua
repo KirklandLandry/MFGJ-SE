@@ -72,6 +72,7 @@ end
 
 function updateHeartContainerTilebatch()
 	heartContainerTilesetBatch:clear()
+	heartContainerTilesetBatch = love.graphics.newSpriteBatch(heartContainerTilesetImage, currentHeartContainerCount)
 	local y = 0 
 	local heartIndex = 1
 	for x=0,currentHeartContainerCount do
