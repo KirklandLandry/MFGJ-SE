@@ -70,7 +70,7 @@ function convertGridToTilemapWorld(map)
 			
 			local currentScreen = {base = {}, enemies = {}} 
 			for i=1,4 do 
-				currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
+				--currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
 			end
 			for y=1,tilesDisplayHeight do
 				currentScreen.base[y] = {}
@@ -175,7 +175,6 @@ function generateCaveWorld()
 	local list = convertGridToTilemapWorld(newCave(10*tilesDisplayWidth, 10*tilesDisplayHeight, tilesDisplayWidth, tilesDisplayHeight))
 	world = {}
 	for y = 1, #list do 
-	print("y"..y)
 		world[y] = {}
 		for x = 1, #list[1] do 
 			world[y][x] = list[y][x]
@@ -188,7 +187,6 @@ function generateCaveWorld()
 	while findingStartPosition do 
 		startingPosition.worldPos = Vector:new(math.random(1,#world[1]),math.random(1,#world))
 		startingPosition.tilePos = Vector:new(math.random(2,tilesDisplayWidth-1), math.random(2, tilesDisplayHeight-1))
-		print(safeGuard)
 		if world[startingPosition.worldPos.y][startingPosition.worldPos.x].base[startingPosition.tilePos.y][startingPosition.tilePos.x] == openTile then 
 			findingStartPosition = false 
 			print(startingPosition.tilePos.x, startingPosition.tilePos.y)

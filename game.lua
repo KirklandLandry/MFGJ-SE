@@ -42,7 +42,7 @@ function loadGame(scaleValue)
 
 	
 	local playerPos = getPlayerStartingPosition()
-	player1 = Player:new((playerPos.x * globalTileSize)+(globalTileSize/2), (playerPos.y * globalTileSize)+(globalTileSize/2), 12, 16)
+	player1 = Player:new(((playerPos.x-1) * globalTileSize), ((playerPos.y-1) * globalTileSize), 12, 16)
 	loadInput()
 	-- first 2 functions are in map. they shouldn't really be, should be more general
 	-- 16 is the tile size 
