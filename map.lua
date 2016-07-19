@@ -14,11 +14,31 @@ local worldY = nil
 local prevWorldX = nil 
 local prevWorldY = nil
 
+-- codes for collision map 
 local openTile = 1 
 local filledTile = 2
 
+-- codes for visual map / tilemap 
+local topTile = 1
+local bottomTile = 2
+local rightTile = 3
+local leftTile = 4
+local topLeftTile = 5
+local topRightTile = 6
+local bottomLeftTile = 7
+local bottomRightTile = 8
+local floorTile = 9
+local stairTile = 0
+local empty = "a"
+local allBorder = "b"
+local upLeftDown = "c"
+local upRightDown = "d"
+local leftDownRight = "e"
+local leftUpRight = "f"
+local upDown = "g"
+local leftRight = "h"
 
-function generateTileMap(mapObject)
+--[[function generateTileMap(mapObject)
 	local result = {base = {}, enemies = {}}
 	
 	for i=1,4 do 
@@ -26,34 +46,33 @@ function generateTileMap(mapObject)
 	end
 	
 	for y = 1, tilesDisplayHeight do 
-		result.base[y] = {}
+		result.collisionMap[y] = {}
 		for x = 1, tilesDisplayWidth do 
 			if y == 1 or y == tilesDisplayHeight or x == 1 or x == tilesDisplayWidth then 
-				result.base[y][x] = filledTile
+				result.collisionMap[y][x] = filledTile
 			else 
-				result.base[y][x] = openTile
+				result.collisionMap[y][x] = openTile
 			end
 		end
 	end
 	
 	if mapObject.up then 
-		result.base[1][5] = openTile 
-		result.base[1][6] = openTile
+		result.collisionMap[1][5] = openTile 
+		result.collisionMap[1][6] = openTile
 	end 
 	if mapObject.down then 
-		result.base[tilesDisplayHeight][5] = openTile 
-		result.base[tilesDisplayHeight][6] = openTile
+		result.collisionMap[tilesDisplayHeight][5] = openTile 
+		result.collisionMap[tilesDisplayHeight][6] = openTile
 	end 
 	if mapObject.left then 
-		result.base[5][1] = openTile 
+		result.collisionMap[5][1] = openTile 
 	end 
 	if mapObject.right then 
-		result.base[5][tilesDisplayWidth] = openTile
+		result.collisionMap[5][tilesDisplayWidth] = openTile
 	end
 	
 	return result
-end 
-
+end ]]
 
 
 
@@ -62,22 +81,44 @@ function convertGridToTilemapWorld(map)
 	
 	local mapList = {}
 	
-	print("split map height: "..#map/tilesDisplayHeight.."split map width: "..#map[1]/tilesDisplayWidth)
+	--print("split map height: "..#map/tilesDisplayHeight.."split map width: "..#map[1]/tilesDisplayWidth)
 	
 	for i=1,#map/tilesDisplayHeight do 	
 		mapList[i] = {}
 		for j=1,#map[1]/tilesDisplayWidth do 	
 			
-			local currentScreen = {base = {}, enemies = {}} 
-			for i=1,4 do 
-				currentScreen.enemies[i] = SimpleEnemy:new(math.random(32,90),math.random(32,90),globalTileSize,globalTileSize)
-			end
+			local currentScreen = {collisionMap = {}, visualMap = {}, enemies = {}} 
+
 			for y=1,tilesDisplayHeight do
-				currentScreen.base[y] = {}
+				currentScreen.collisionMap[y] = {}
 				for x=1,tilesDisplayWidth do 
-					currentScreen.base[y][x] = map[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
+					currentScreen.collisionMap[y][x] = map[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
 				end
 			end
+			
+			-- quick and dirty way to add enemies to a map. 
+			-- obviously make this better later
+			for i=1,4 do 
+				local findingStartPosition = true 
+				local safeGuard = 0 
+				enemyPosition = Vector:new(0,0)
+				while findingStartPosition do 
+					enemyPosition = Vector:new(math.random(2,tilesDisplayWidth-1), math.random(2, tilesDisplayHeight-1))
+					if currentScreen.collisionMap[enemyPosition.y][enemyPosition.x] == openTile then 
+						findingStartPosition = false 
+					end	
+					safeGuard = safeGuard + 1 
+					-- could be trying to spawn an enemy in a room of purely filled tiles, so don't loop forever on that. 
+					-- No point in spawning in an unreachable area
+					-- later, enemy population should be determined by room size and layout 
+					if safeGuard > 20 then 
+						findingStartPosition = false
+					end
+				end			
+				currentScreen.enemies[i] = SimpleEnemy:new((enemyPosition.x-1) * globalTileSize, (enemyPosition.y-1) * globalTileSize,globalTileSize,globalTileSize)
+			end
+			
+			
 			mapList[i][j] = currentScreen
 		end
 	end
@@ -86,7 +127,7 @@ end
 
 
 
-function generateWorld()
+--[[function generateWorld()
 	-- start with a blank map. no rooms connecting
 	local mapCodes = {}
 	for y = 1, tilesDisplayHeight do 
@@ -148,7 +189,7 @@ function generateWorld()
 	end
 	print("tilesDisplayWidth = "..tilesDisplayWidth, "tilesDisplayHeight = "..tilesDisplayHeight)
 	print("world generated with size ("..#world[1]..", "..#world..")")
-end
+end]]
 
 local startingPosition = {worldPos = nil, tilePos = nil}
 function getPlayerStartingPosition()
@@ -187,7 +228,7 @@ function generateCaveWorld()
 	while findingStartPosition do 
 		startingPosition.worldPos = Vector:new(math.random(1,#world[1]),math.random(1,#world))
 		startingPosition.tilePos = Vector:new(math.random(2,tilesDisplayWidth-1), math.random(2, tilesDisplayHeight-1))
-		if world[startingPosition.worldPos.y][startingPosition.worldPos.x].base[startingPosition.tilePos.y][startingPosition.tilePos.x] == openTile then 
+		if world[startingPosition.worldPos.y][startingPosition.worldPos.x].collisionMap[startingPosition.tilePos.y][startingPosition.tilePos.x] == openTile then 
 			findingStartPosition = false 
 			print(startingPosition.tilePos.x, startingPosition.tilePos.y)
 		end	
@@ -212,10 +253,6 @@ function loadMap(scaledScreenWidth, scaledScreenHeight)
 	worldY = startingPosition.worldPos.y
 	prevWorldX = worldX
 	prevWorldY = worldY
-	
-
-	
-
 	
 	loadTilebatch()
 end
@@ -275,7 +312,7 @@ function checkTileMapCollision(box, tileX, tileY)
 	local result = nil 
 	-- now check for collisions with the tiles on the tilemap
 	-- checks a 3x3 space centred around the player
-	local currentWorldTileMap = world[worldY][worldX].base
+	local currentWorldTileMap = world[worldY][worldX].collisionMap
 	for y = yMin, yMin + 2 do 
 		for x = xMin, xMin + 2 do 
 			if currentWorldTileMap[y][x] == 2 then		
@@ -331,7 +368,7 @@ function updateMap(dt, playerAttack)
 	
 	if gameState == GameStates.scrollComplete then 
 		print("map scroll complete")
-		updateTileSetBatch(world[worldY][worldX].base)	
+		updateTileSetBatch(world[worldY][worldX].collisionMap)	
 	end
 	
 	local length = #world[prevWorldY][prevWorldX].enemies
@@ -366,19 +403,19 @@ function updateMap(dt, playerAttack)
 		
 		if worldX > prevWorldX then 
 			gameState = GameStates.scrollingRight
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.right)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.right)
 		elseif worldX < prevWorldX then 
 			gameState = GameStates.scrollingLeft
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.left)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.left)
 		elseif worldY > prevWorldY then 
 			gameState = GameStates.scrollingDown
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.down)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.down)
 		elseif worldY < prevWorldY then 
 			gameState = GameStates.scrollingUp
-			updateTileSetBatch(world[prevWorldY][prevWorldX].base, world[worldY][worldX].base, Directions.up)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.up)
 		else 
 			-- this should never happen
-			updateTileSetBatch(world[worldY][worldX].base)
+			updateTileSetBatch(world[worldY][worldX].collisionMap)
 		end
 		prevWorldX = worldX 
 		prevWorldY = worldY
@@ -395,7 +432,7 @@ function loadTilebatch()
 	currentTileMapQuads[filledTile] = love.graphics.newQuad(globalTileSize,0,globalTileSize, globalTileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
 	
 	currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight)
-	updateTileSetBatch(world[worldY][worldX].base)
+	updateTileSetBatch(world[worldY][worldX].collisionMap)
 end
 
 function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPlacement)	
@@ -443,7 +480,7 @@ end
 function debugDrawCollisionMap()
 	for y=1,tilesDisplayHeight do
 		for x=1, tilesDisplayWidth do 
-			if world[worldY][worldX].base[y][x] == 2 then		
+			if world[worldY][worldX].collisionMap[y][x] == 2 then		
 				love.graphics.setColor(255,0,0)
 			else 
 				love.graphics.setColor(0,200,22)
@@ -477,7 +514,7 @@ function debugDrawPlayerCollisionBounds(playerCoord)
 		yMin = tileY - 1 
 	end
 	
-	local currentWorldTileMap = world[worldY][worldX].base
+	local currentWorldTileMap = world[worldY][worldX].collisionMap
 	for y = yMin, yMin + 2 do 
 		for x = xMin, xMin + 2 do 
 			if currentWorldTileMap[y][x] == 2 then		

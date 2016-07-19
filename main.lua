@@ -28,9 +28,21 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- NOTE: 
+-- change gamestate in game.lua to a stack 
+-- this way you can switch states but also allow you to return to ongoing states 
+-- 
+
+-- BALANCING NOTES: 
+-- when you hit an enemy, you should be pushed back.
+-- this makes it so that you can't just go at it and lock an enemy into a corner
+-- make attack pushback situational (a boss in stun won't push you back)
+-- another thing, 
+-- make it so enemies can't move on the border tiles so you won't move to another map and die 
+-- also make the room the player spawns in have no enemies 
+-- enemies need to have a minimum set area of open tiles for them to spawn. this also means no enemies in those tiles 
 
 -- NOTE: 
--- add enemies back in too 
 -- add in some treasure, floors, dead/win conditions and that's almost a working game
 
 -- NOTE: 

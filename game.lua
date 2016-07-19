@@ -58,9 +58,20 @@ local screenShiftY = 0
 local gameOverFade = 0
 
 function updateGame(dt)
-	if gameState == GameStates.scrollComplete then gameState = GameStates.neutral end
 	
-	if gameState == GameStates.gameOver then 
+	--[[if gameState ~= GameStates.pause and getKeyPress("1") then 
+		gameState = GameStates.pause
+	end]]
+	
+	-- the pause cancels the scrolling and messes everything up 
+	-- account for that 
+	if gameState == GameStates.pause then 
+		--[[if getKeyPress("1") then 
+			gameState = GameStates.neutral 
+		end]]
+	elseif gameState == GameStates.scrollComplete then 
+		gameState = GameStates.neutral 
+	elseif gameState == GameStates.gameOver then 
 		gameOverFade = gameOverFade + (dt*8)
 		gameOverFade = math.clamp(gameOverFade, 1)
 		if getKeyPress("r") then 

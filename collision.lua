@@ -86,6 +86,8 @@ end
 
 -- if the collision goes far enough, right now you can still totall get bumped out of the map 
 -- if the enemy pushes you enough right when you're at the edge you'll get bumped out 
+-- probably because you'll flip to the other side of the square.
+-- need to know where you were before and use that to decide how to resolve
 
 function AABBvsTileDetectionAndResolution(a, bx,by,bw,bh)
 	local result = {normal = Vector:new(0,0), penetration = 0}

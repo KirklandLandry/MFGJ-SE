@@ -7,7 +7,8 @@ function SimpleEnemy:new(x, y, width, height)
 	setmetatable(o, self)
 	self.__index = self
 	o.body = Body:new(x,y,width,height, 2.5,2.5, 0.09)
-	o.moveTimer = Timer:new(1, TimerModes.repeating)
+	o.moveTimer = Timer:new(math.random(0,100) * 0.01, TimerModes.repeating)
+	
 	o.invincibilityFrames = 0
 	return o
 end
@@ -23,7 +24,7 @@ end
 	if self.body.moveState == MoveStates.recoil then 
 		if self.body.recoilTimer:isComplete(dt) then 
 			if self.body.moveState == MoveStates.recoil then 
-				self.body.moveState = MoveStates.neutral 
+				self.body.moveState = MoveStates.walking 
 				
 			end
 		end	
@@ -31,9 +32,11 @@ end
 	end
 	if self.moveTimer:isComplete(dt) then 
 		if self.body.moveState == MoveStates.neutral then 
+			self.moveTimer.timerMax = math.random(50,350) * 0.01
 			self.body.moveState = MoveStates.walking
 			self.body.facingDirection = getRandomDirection()
 		elseif self.body.moveState == MoveStates.walking then 
+			self.moveTimer.timerMax = math.random(0,100) * 0.01
 			self.body.moveState = MoveStates.neutral
 		end
 	end
@@ -45,11 +48,8 @@ end
 	-- check to see if it went off the edge and move based on the correction that gets returned 
 	self.body.box:vectorMove(AABBvsScreenEdge(self.body.box))
 	
-	local enemyMapCoords = getTileCoordinate(self.body.box.minVec.x, self.body.box.minVec.y)
-	-- check if a collision occurs with the map 
-	if checkTileMapCollision(self.body.box, enemyMapCoords.x, enemyMapCoords.y) then 
-		
-	end
+	self.body:tilemapCollisions()
+	
 end
 
 function SimpleEnemy:isInvincible()

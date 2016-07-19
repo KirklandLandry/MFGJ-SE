@@ -2,7 +2,7 @@ Timer = {timerValue = 0, timerMax = 0, mode = nil}
 TimerModes = {repeating = "repeating", single = "single"}
 
 function Timer:new(timerMax, mode)	
-	assert((mode == TimerModes.repeating or mode == TimerModes.single) and timerMax > 0, 
+	assert((mode == TimerModes.repeating or mode == TimerModes.single) and timerMax >= 0, 
 	"incorrect timer initialization (check that you sent a valid TimerMode and timerMax is > 0)")
 	
 	local o = {}
