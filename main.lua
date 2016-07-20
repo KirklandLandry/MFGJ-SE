@@ -28,10 +28,20 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+--NOTE:
+-- big old oversight for collisions. 
+-- when doing left/right x collisions, you need to use the full box, not just the offset y box for collision
+-- if you use the offset y box (the bottom part of the sprite used for y collisions) then you can slip under tiles left and right 
+-- if there's a tile at the bottom of the screen, you'll be able to slip under because there's no collisions going on for the top bit of the sprite 
+
+--NOTE: 
+-- add a simple mem profiler 
+
 -- NOTE: 
 -- change gamestate in game.lua to a stack 
 -- this way you can switch states but also allow you to return to ongoing states 
--- 
+-- ex: neutral state -> push walking state -> walking forward -> push recoil state -> 
+-- recoil -> pop recoil state, resume walking -> pop walking state and back to neutral
 
 -- BALANCING NOTES: 
 -- when you hit an enemy, you should be pushed back.
@@ -49,7 +59,6 @@ globalTileSize = 16
 -- could add in a pause menu that lets you scroll through the tiles of the map you've discovered
 -- so basically, add a map
 
-
 -- NOTE: 
 -- need to add this very important step for cave gen / screen scrolling
 -- right now you can scroll down right into a filled tile
@@ -60,10 +69,6 @@ globalTileSize = 16
 -- on generation, at each screen edge case, if the next edge would be filled then make the current edge filled (done, fully functional)
 -- realistically...
 -- should do both to be safe
-
--- NOTE:
--- should maybe seperate the map into a collision layer and tile layer. yes, do this.
-
 
 -- NOTE:
 -- add a camera and the ability for larger scrolling areas
@@ -139,6 +144,8 @@ function love.load(arg)
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	screenWidth = love.graphics.getWidth()
 	screenHeight = love.graphics.getHeight()
+	
+	love.graphics.setNewFont("assets/fonts/retroscape/Retroscape.ttf")
 	
 	loadGame(scaleValue)
 	loadFramerateLock()

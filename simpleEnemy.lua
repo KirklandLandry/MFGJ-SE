@@ -8,7 +8,8 @@ function SimpleEnemy:new(x, y, width, height)
 	self.__index = self
 	o.body = Body:new(x,y,width,height, 2.5,2.5, 0.09)
 	o.moveTimer = Timer:new(math.random(0,100) * 0.01, TimerModes.repeating)
-	
+	o.imagePath = "assets/tilesets/SimpleEnemy.png"
+	o.image = nil
 	o.invincibilityFrames = 0
 	return o
 end
@@ -46,7 +47,7 @@ end
 	self:move(dt)
 	
 	-- check to see if it went off the edge and move based on the correction that gets returned 
-	self.body.box:vectorMove(AABBvsScreenEdge(self.body.box))
+	self.body.box:vectorMove(AABBvsScreenEdge(self.body.box, globalTileSize))
 	
 	self.body:tilemapCollisions()
 	
@@ -72,15 +73,30 @@ function SimpleEnemy:getHealth()
 	return self.body.currentHealth
 end
 
-function SimpleEnemy:draw(i)
-	love.graphics.setColor(99,165,33)
-	love.graphics.rectangle("fill", self.body.box.minVec.x, self.body.box.minVec.y, self.body.box.width, self.body.box.height)
+function SimpleEnemy:draw()
+	if self.image == nil then 
+		self:loadImage()
+	end
+	love.graphics.draw(self.image, self.body.box.minVec.x, self.body.box.minVec.y)
+end
+
+function SimpleEnemy:loadImage()
+	self.image = love.graphics.newImage("assets/tilesets/SimpleEnemy.png")
+	self.image:setFilter("nearest", "nearest")
+end
+
+-- when an enemy goes off screen or dies, the image should be unloaded so that it doesn't waste mem.
+function SimpleEnemy:unloadImage()
+	self.image = nil 
+end
+
+function SimpleEnemy:drawDebug(i)
 	self.body.box:drawCorners()
-	
 	-- print out the enemies array index and health
 	love.graphics.setColor(0,0,0)
 	love.graphics.print(i,self.body.box.minVec.x, self.body.box.minVec.y, 0, 0.5, 0.5)
 	love.graphics.print("hp:"..self.body.currentHealth, self.body.box.minVec.x, self.body.box.minVec.y + 5, 0, 0.4, 0.4)
+	love.graphics.setColor(255,255,255,255)
 end
 
 

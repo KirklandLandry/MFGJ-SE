@@ -28,7 +28,7 @@ function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceTo
 	
 	local vMap = generateVisualMap(map)
 	
-	printMap(visualMap, tilesDisplayWidth, tilesDisplayHeight, true)
+	printMap(vMap, tilesDisplayWidth, tilesDisplayHeight, true)
 	return {collisionMap = map, visualMap = vMap} 
 end
 
@@ -273,7 +273,9 @@ function generateVisualMap(map)
 				elseif not up and not down and not left and right then 
 					result[y][x] = rightTile
 				end
-			end 
+			else
+				result[y][x] = floorTile
+			end
 		end 
 	end
 	return result

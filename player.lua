@@ -188,9 +188,12 @@ function Player:drawPlayer(screenShiftX, screenShiftY)
 	end 
 		
 	love.graphics.setColor(255,255,255)
-	self.body.box:drawCorners()
+	
 end
 
+function Player:drawDebug()
+	self.body.box:drawCorners()
+end
 
 
 function Player:getPlayerHealth()

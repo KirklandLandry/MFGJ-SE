@@ -30,10 +30,12 @@ function loadHeartContainerTilebatch(playerHeartContainers, playerHealth)
 	
 	local halfTileSize = globalTileSize/2
 	
-	heartContainerTilesetQuads = {}
-	for i=1,5 do 
-		heartContainerTilesetQuads[i] = love.graphics.newQuad((i-1)*halfTileSize,0, halfTileSize, halfTileSize, 
-										heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
+	if heartContainerTilesetBatch == nil then 
+		heartContainerTilesetQuads = {}
+		for i=1,5 do 
+			heartContainerTilesetQuads[i] = love.graphics.newQuad((i-1)*halfTileSize,0, halfTileSize, halfTileSize, 
+											heartContainerTilesetImage:getWidth(), heartContainerTilesetImage:getHeight())
+		end
 	end
 	
 	heartContainerTilesetBatch = love.graphics.newSpriteBatch(heartContainerTilesetImage, currentHeartContainerCount)

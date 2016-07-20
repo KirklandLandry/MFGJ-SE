@@ -34,6 +34,8 @@ local player1 = nil
 gameState = nil 
 
 function loadGame(scaleValue)
+	--local g1 = collectgarbage('count') * 0.00098
+	
 	gameState = GameStates.neutral
 
 	-- has to happen first.
@@ -42,11 +44,15 @@ function loadGame(scaleValue)
 	
 	local playerPos = getPlayerStartingPosition()
 	-- -1 because, while tables and everything will start at 1, the map physically starts at 0,0
+	player1 = nil 
 	player1 = Player:new(((playerPos.x-1) * globalTileSize), ((playerPos.y-1) * globalTileSize), 12, 16)
 	loadInput()
 	-- first 2 functions are in map. they shouldn't really be, should be more general
 	-- 16 is the tile size 
 	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), player1:getPlayerHeartContainers(), player1:getPlayerHealth())
+	
+	--collectgarbage()
+	--print("before: "..g1, "after: "..collectgarbage('count') * 0.00098)
 end
 
 local screenShiftAmount = 260
@@ -57,7 +63,11 @@ local screenShiftY = 0
 
 local gameOverFade = 0
 
+DRAW_DEBUG = false 
+
 function updateGame(dt)
+	
+	if getKeyPress("`") then DRAW_DEBUG = not DRAW_DEBUG end
 	
 	--[[if gameState ~= GameStates.pause and getKeyPress("1") then 
 		gameState = GameStates.pause
@@ -96,11 +106,15 @@ end
 
 function drawGame()
 	drawTileSetBatch(screenShiftX, screenShiftY)
-	debugDrawCollisionMap()
-	debugDrawPlayerCollisionBounds(player1:getPlayerCoord())
-	
+	drawEnemies()	
 	player1:drawPlayer(screenShiftX, screenShiftY)
 	drawUi()
+	
+	if DRAW_DEBUG then 
+		debugDrawCollisionMap()
+		debugDrawPlayerCollisionBounds(player1:getPlayerCoord())
+		player1:drawDebug()
+	end
 	
 	if gameState == GameStates.gameOver then 		
 		love.graphics.setColor(0,0,0,gameOverFade * 255)

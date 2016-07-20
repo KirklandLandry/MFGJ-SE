@@ -76,23 +76,30 @@ end ]]
 
 
 
-function convertGridToTilemapWorld(map)
-	assert(#map%tilesDisplayHeight == 0 and #map[1]%tilesDisplayWidth == 0, "map size not of the proper multiple")
+function convertGridToTilemapWorld(maps)
+	cMap = maps.collisionMap
+	vMap = maps.visualMap	
+	
+	assert(#cMap == #vMap  and #cMap[1] == #vMap[1], "cMap and vMap not equal")
+	assert(#vMap%tilesDisplayHeight == 0 and #vMap[1]%tilesDisplayWidth == 0, "map size not of the proper multiple")
 	
 	local mapList = {}
 	
 	--print("split map height: "..#map/tilesDisplayHeight.."split map width: "..#map[1]/tilesDisplayWidth)
 	
-	for i=1,#map/tilesDisplayHeight do 	
+	for i=1,#cMap/tilesDisplayHeight do 	
 		mapList[i] = {}
-		for j=1,#map[1]/tilesDisplayWidth do 	
+		for j=1,#cMap[1]/tilesDisplayWidth do 	
 			
 			local currentScreen = {collisionMap = {}, visualMap = {}, enemies = {}} 
-
+			
+			
 			for y=1,tilesDisplayHeight do
 				currentScreen.collisionMap[y] = {}
+				currentScreen.visualMap[y] = {}
 				for x=1,tilesDisplayWidth do 
-					currentScreen.collisionMap[y][x] = map[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
+					currentScreen.collisionMap[y][x] = cMap[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
+					currentScreen.visualMap[y][x] = vMap[y + ((i-1)*tilesDisplayHeight)][x + ((j-1)*tilesDisplayWidth)]
 				end
 			end
 			
@@ -214,6 +221,24 @@ function generateCaveWorld()
 	-- where a treasure spawns at the end 
 
 	local list = convertGridToTilemapWorld(newCave(10*tilesDisplayWidth, 10*tilesDisplayHeight, tilesDisplayWidth, tilesDisplayHeight))
+	
+	
+	if world ~= nil then 
+		for y = #world,1,-1  do 
+			for x = #world[1],1,-1  do 
+				for i=#world[y][x].enemies,1,-1  do 	
+					world[y][x].enemies[i]:unloadImage()
+					world[y][x].enemies[i] = nil 
+				end	
+				world[y][x].collisionMap = nil 
+				world[y][x].visualMap = nil 
+				world[y][x] = nil
+			end
+			world[y] = nil 
+		end
+	end
+
+	
 	world = {}
 	for y = 1, #list do 
 		world[y] = {}
@@ -368,7 +393,7 @@ function updateMap(dt, playerAttack)
 	
 	if gameState == GameStates.scrollComplete then 
 		print("map scroll complete")
-		updateTileSetBatch(world[worldY][worldX].collisionMap)	
+		updateTileSetBatch(world[worldY][worldX].visualMap)	
 	end
 	
 	local length = #world[prevWorldY][prevWorldX].enemies
@@ -403,36 +428,72 @@ function updateMap(dt, playerAttack)
 		
 		if worldX > prevWorldX then 
 			gameState = GameStates.scrollingRight
-			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.right)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].visualMap, world[worldY][worldX].visualMap, Directions.right)
 		elseif worldX < prevWorldX then 
 			gameState = GameStates.scrollingLeft
-			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.left)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].visualMap, world[worldY][worldX].visualMap, Directions.left)
 		elseif worldY > prevWorldY then 
 			gameState = GameStates.scrollingDown
-			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.down)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].visualMap, world[worldY][worldX].visualMap, Directions.down)
 		elseif worldY < prevWorldY then 
 			gameState = GameStates.scrollingUp
-			updateTileSetBatch(world[prevWorldY][prevWorldX].collisionMap, world[worldY][worldX].collisionMap, Directions.up)
+			updateTileSetBatch(world[prevWorldY][prevWorldX].visualMap, world[worldY][worldX].visualMap, Directions.up)
 		else 
 			-- this should never happen
-			updateTileSetBatch(world[worldY][worldX].collisionMap)
+			updateTileSetBatch(world[worldY][worldX].visualMap)
 		end
+		
+		for i=1,#world[prevWorldY][prevWorldX].enemies do 
+			world[worldY][worldX].enemies[i]:unloadImage()
+		end
+		
 		prevWorldX = worldX 
 		prevWorldY = worldY
 	end
 end
 
+
+
 function loadTilebatch()
-	-- tilebatch stuff starts here
-	currentTilesetImage = love.graphics.newImage("assets/tilesets/testTileSet2.png")
-	currentTilesetImage:setFilter("nearest", "nearest")
+	if currentTilesetImage == nil then 
+		-- tilebatch stuff starts here
+		currentTilesetImage = love.graphics.newImage("assets/tilesets/background.png")--"assets/tilesets/testTileSet2.png")
+		currentTilesetImage:setFilter("nearest", "nearest")
+	end 
 	
-	currentTileMapQuads = {}
-	currentTileMapQuads[openTile] = love.graphics.newQuad(0,0,globalTileSize, globalTileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
-	currentTileMapQuads[filledTile] = love.graphics.newQuad(globalTileSize,0,globalTileSize, globalTileSize, currentTilesetImage:getWidth(), currentTilesetImage:getHeight())
+	if currentTileMapQuads == nil then 
+		local tileSize = globalTileSize
+		local tilesetWidth = currentTilesetImage:getWidth()
+		local tilesetHeight = currentTilesetImage:getHeight()
+		
+		currentTileMapQuads = {}
+		-- first row: up, down,left, right 
+		currentTileMapQuads[topTile] 	= love.graphics.newQuad(tileSize * 0, 0, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[bottomTile] = love.graphics.newQuad(tileSize * 1, 0, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[leftTile] 	= love.graphics.newQuad(tileSize * 2, 0, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[rightTile] 	= love.graphics.newQuad(tileSize * 3, 0, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		-- second row: upleft, downright, upright, downleft 
+		currentTileMapQuads[topLeftTile] 		= love.graphics.newQuad(tileSize * 0, tileSize * 1, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[bottomRightTile] 	= love.graphics.newQuad(tileSize * 1, tileSize * 1, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[topRightTile] 		= love.graphics.newQuad(tileSize * 2, tileSize * 1, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[bottomLeftTile] 	= love.graphics.newQuad(tileSize * 3, tileSize * 1, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		-- third row: upleftdown, uprightdown, leftdownright, leftupright 
+		currentTileMapQuads[upLeftDown] 	= love.graphics.newQuad(tileSize * 0, tileSize * 2, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[upRightDown] 	= love.graphics.newQuad(tileSize * 1, tileSize * 2, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[leftDownRight] 	= love.graphics.newQuad(tileSize * 2, tileSize * 2, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[leftUpRight] 	= love.graphics.newQuad(tileSize * 3, tileSize * 2, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		-- fourth row: floor, stair, none, all 
+		currentTileMapQuads[floorTile] 	= love.graphics.newQuad(tileSize * 0, tileSize * 3, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[stairTile] 	= love.graphics.newQuad(tileSize * 1, tileSize * 3, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[fillTile] 	= love.graphics.newQuad(tileSize * 2, tileSize * 3, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[allBorder] 	= love.graphics.newQuad(tileSize * 3, tileSize * 3, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		-- fifth row: leftRight, updown 
+		currentTileMapQuads[leftRight] 	= love.graphics.newQuad(tileSize * 0, tileSize * 4, tileSize, tileSize, tilesetWidth, tilesetHeight)
+		currentTileMapQuads[upDown] 	= love.graphics.newQuad(tileSize * 1, tileSize * 4, tileSize, tileSize, tilesetWidth, tilesetHeight)	
+	end
 	
 	currentTileSetBatch = love.graphics.newSpriteBatch(currentTilesetImage, tilesDisplayWidth * tilesDisplayHeight)
-	updateTileSetBatch(world[worldY][worldX].collisionMap)
+	updateTileSetBatch(world[worldY][worldX].visualMap)
 end
 
 function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPlacement)	
@@ -469,10 +530,15 @@ end
 
 function drawTileSetBatch(screenShiftX, screenShiftY)
 	love.graphics.draw(currentTileSetBatch, screenShiftX, screenShiftY)
-	
+end
+
+function drawEnemies()	
 	if gameState == GameStates.neutral then 
 		for i=1, #world[prevWorldY][prevWorldX].enemies do 
-			world[prevWorldY][prevWorldX].enemies[i]:draw(i)
+			world[prevWorldY][prevWorldX].enemies[i]:draw()
+			if DRAW_DEBUG then 
+				world[prevWorldY][prevWorldX].enemies[i]:drawDebug(i)
+			end
 		end
 	end
 end
