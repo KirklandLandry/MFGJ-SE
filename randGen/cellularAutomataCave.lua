@@ -26,10 +26,10 @@ function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceTo
 		map = doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 	end
 	
-	local visualMap = generateVisualMap(map)
+	local vMap = generateVisualMap(map)
 	
-	printMap(map, tilesDisplayWidth, tilesDisplayHeight, true)
-	return map 
+	printMap(visualMap, tilesDisplayWidth, tilesDisplayHeight, true)
+	return {collisionMap = map, visualMap = vMap} 
 end
 
 function printMap(map, tilesDisplayWidth, tilesDisplayHeight, printAsGrid)
@@ -113,6 +113,8 @@ function doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 			-- 2) if a tile doesn't have n unfilled neighbours and is on an edge, check how many. 
 			--    if it has less than m, fill it in. if it has > m, expand the area around it.
 			
+			-- still not perfect.
+
 			if x%tilesDisplayWidth == 0 and x < #result[1] and result[y][x+1] == filled then 
 				result[y][x] = filled
 			end	
@@ -123,9 +125,13 @@ function doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 				xModCounter = xModCounter + 1 
 			end
 			
+			-- had this one fail to fill in a spot, I think 
+			-- works 90% of the time, something must be missing
 			if y%tilesDisplayHeight == 0 and y < #result and result[y+1][x] == filled then 
 				result[y][x] = filled
 			end
+			
+
 			if y == (yModCounter*tilesDisplayHeight)+1 and y>1 and result[y-1][x] == filled then 
 				result[y][x] = filled
 			end 
@@ -179,7 +185,7 @@ local bottomLeftTile = 7
 local bottomRightTile = 8
 local floorTile = 9
 local stairTile = 0
-local empty = "a"
+local fillTile = "a"
 local allBorder = "b"
 local upLeftDown = "c"
 local upRightDown = "d"
@@ -231,7 +237,7 @@ function generateVisualMap(map)
 				
 				-- all edges 
 				elseif not up and not down and not left and not right then 
-					result[y][x] = empty 
+					result[y][x] = fillTile 
 				
 				-- 3 edges 
 				elseif not up and down and left and right then 
@@ -244,7 +250,7 @@ function generateVisualMap(map)
 					result[y][x] = upLeftDown
 				
 				-- 2 edges 
-				elseif not up and not down and left and right 
+				elseif not up and not down and left and right then 
 					result[y][x] = leftRight
 				elseif up and down and not left and not right then 
 					result[y][x] = upDown
@@ -258,18 +264,19 @@ function generateVisualMap(map)
 					result[y][x] = bottomRightTile
 					
 				-- 1 edge 
-				elseif not up and down and left and right then 
-					
-				elseif
-				
-				elseif
-				
-				elseif
-				
+				elseif up and not down and not left and not right then 
+					result[y][x] = topTile
+				elseif not up and down and not left and not right then 
+					result[y][x] = bottomTile
+				elseif not up and not down and left and not right then 
+					result[y][x] = leftTile
+				elseif not up and not down and not left and right then 
+					result[y][x] = rightTile
 				end
 			end 
 		end 
 	end
+	return result
 end
 
 
