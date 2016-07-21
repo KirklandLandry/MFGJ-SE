@@ -1,5 +1,7 @@
 SimpleEnemy = {body = nil, moveTimer = nil, invincibilityFrames = 0}
 
+local enemyImage = nil 
+
 local recoilAmount = 100
 
 function SimpleEnemy:new(x, y, width, height)	
@@ -8,8 +10,11 @@ function SimpleEnemy:new(x, y, width, height)
 	self.__index = self
 	o.body = Body:new(x,y,width,height, 2.5,2.5, 0.09)
 	o.moveTimer = Timer:new(math.random(0,100) * 0.01, TimerModes.repeating)
-	o.imagePath = "assets/tilesets/SimpleEnemy.png"
-	o.image = nil
+	
+	if enemyImage == nil then 
+		enemyImage = loadImage("assets/tilesets/SimpleEnemy.png")
+	end
+	
 	o.invincibilityFrames = 0
 	return o
 end
@@ -74,21 +79,22 @@ function SimpleEnemy:getHealth()
 end
 
 function SimpleEnemy:draw()
-	if self.image == nil then 
+	--[[if self.image == nil then 
 		self:loadImage()
-	end
-	love.graphics.draw(self.image, self.body.box.minVec.x, self.body.box.minVec.y)
+	end]]
+	love.graphics.draw(enemyImage, self.body.box.minVec.x, self.body.box.minVec.y)
 end
 
-function SimpleEnemy:loadImage()
-	self.image = love.graphics.newImage("assets/tilesets/SimpleEnemy.png")
-	self.image:setFilter("nearest", "nearest")
+function loadImage(path)
+	local result = love.graphics.newImage(path)
+	result:setFilter("nearest", "nearest")
+	return result
 end
 
 -- when an enemy goes off screen or dies, the image should be unloaded so that it doesn't waste mem.
-function SimpleEnemy:unloadImage()
+--[[function SimpleEnemy:unloadImage()
 	self.image = nil 
-end
+end]]
 
 function SimpleEnemy:drawDebug(i)
 	self.body.box:drawCorners()

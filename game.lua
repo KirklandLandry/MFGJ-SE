@@ -51,6 +51,7 @@ function loadGame(scaleValue)
 	-- 16 is the tile size 
 	loadUi(getTilesDisplayWidth(), getTilesDisplayHeight(), player1:getPlayerHeartContainers(), player1:getPlayerHealth())
 	
+	
 	--collectgarbage()
 	--print("before: "..g1, "after: "..collectgarbage('count') * 0.00098)
 end
@@ -72,7 +73,7 @@ function updateGame(dt)
 	--[[if gameState ~= GameStates.pause and getKeyPress("1") then 
 		gameState = GameStates.pause
 	end]]
-	
+
 	-- the pause cancels the scrolling and messes everything up 
 	-- account for that 
 	if gameState == GameStates.pause then 

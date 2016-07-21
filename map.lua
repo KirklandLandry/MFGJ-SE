@@ -227,7 +227,6 @@ function generateCaveWorld()
 		for y = #world,1,-1  do 
 			for x = #world[1],1,-1  do 
 				for i=#world[y][x].enemies,1,-1  do 	
-					world[y][x].enemies[i]:unloadImage()
 					world[y][x].enemies[i] = nil 
 				end	
 				world[y][x].collisionMap = nil 
@@ -291,26 +290,22 @@ function getTilesDisplayHeight()
 end
 
 
--- fix this up a bit. moving right or down draws the player completely into the next tilemap 
--- while left and up draws the player barely. 
--- this is because it's only taking into account x,y (the top right of the box) and ignoring the width/height 
--- no technical problems with this, just an aesthetic / consistency problem to address later
-
-function checkIfMovedToNextTileMap(box, playerTileX, playerTileY)	
+-- 
+function checkIfMovedToNextTileMap(box, playerTileXmin, playerTileYmin, playerTileXmax, playerTileYmax)	
 	local result = Vector:new(0,0)
 	-- first check if they moved to a different tilemap on the world map
-	if playerTileX < 1 and worldX -1 > 0 then 
-		result.x = tilesDisplayWidth * globalTileSize
+	if playerTileXmin < 1 and worldX -1 > 0 then
+		result.x = (tilesDisplayWidth * globalTileSize) - box.width
 		worldX = worldX - 1 
-	elseif playerTileX > tilesDisplayWidth and worldX + 1 <= #world[worldY] then 
-		result.x = (-tilesDisplayWidth * globalTileSize)
+	elseif playerTileXmax > tilesDisplayWidth and worldX + 1 <= #world[worldY] then
+		result.x = (-tilesDisplayWidth * globalTileSize) + box.width
 		worldX = worldX + 1
 	end	
-	if playerTileY < 1 and worldY -1 > 0 then 
-		result.y = tilesDisplayHeight * globalTileSize
+	if playerTileYmin < 1 and worldY -1 > 0 then
+		result.y = (tilesDisplayHeight * globalTileSize) - box.height
 		worldY = worldY - 1
-	elseif playerTileY > tilesDisplayHeight and worldY + 1 <= #world then 
-		result.y = -tilesDisplayHeight * globalTileSize
+	elseif playerTileYmax > tilesDisplayHeight and worldY + 1 <= #world then
+		result.y = (-tilesDisplayHeight * globalTileSize) + box.height
 		worldY = worldY + 1
 	end
 	return (result)
@@ -443,11 +438,6 @@ function updateMap(dt, playerAttack)
 			updateTileSetBatch(world[worldY][worldX].visualMap)
 		end
 		
-		for i=1,#world[prevWorldY][prevWorldX].enemies do 
-			if world[worldY][worldX].enemies ~= nil and world[worldY][worldX].enemies[i] ~= nil then 
-				world[worldY][worldX].enemies[i]:unloadImage()
-			end 
-		end
 		
 		prevWorldX = worldX 
 		prevWorldY = worldY

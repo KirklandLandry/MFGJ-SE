@@ -150,10 +150,12 @@ function Player:update(dt)
 	end
 	
 	-- get the player's tile coordinates
-	local playerTileCoords = getTileCoordinate(topLeft.x, topLeft.y)
+	local playerTileCoordsMin = getTileCoordinate(topLeft.x, topLeft.y)
+	local playerTileCoordsMax = getTileCoordinate(bottomRight.x, bottomRight.y)
+
 	
 	-- check for moving to the next tilemap
-	local shiftVector = (checkIfMovedToNextTileMap(self.body.box, playerTileCoords.x, playerTileCoords.y))
+	local shiftVector = (checkIfMovedToNextTileMap(self.body.box, playerTileCoordsMin.x, playerTileCoordsMin.y, playerTileCoordsMax.x, playerTileCoordsMax.y))
 	self.body.box:vectorMove(shiftVector)
 	
 	self.body:tilemapCollisions()

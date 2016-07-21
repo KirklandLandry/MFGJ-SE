@@ -1,0 +1,13 @@
+[ACTORS]
+   
+one=assets/portraits/testPortrait128x128.png
+two=assets/portraits/defaultPortait128x128.png
+
+[LINES]
+one=this is the first line
+two=that's `2amazing`0
+two=scripts can now be read from a file
+two=how `1wild`0
+one=I know, right?
+
+one=this is going to be an extra line. the last line. a very extra long line. this hopefully goes where no line has gone before.Very long line. what a line.
