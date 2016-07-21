@@ -444,7 +444,9 @@ function updateMap(dt, playerAttack)
 		end
 		
 		for i=1,#world[prevWorldY][prevWorldX].enemies do 
-			world[worldY][worldX].enemies[i]:unloadImage()
+			if world[worldY][worldX].enemies ~= nil and world[worldY][worldX].enemies[i] ~= nil then 
+				world[worldY][worldX].enemies[i]:unloadImage()
+			end 
 		end
 		
 		prevWorldX = worldX 
@@ -529,7 +531,9 @@ function updateTileSetBatch(tileMapToDraw, secondTileMapToDraw, secondTileMapPla
 end
 
 function drawTileSetBatch(screenShiftX, screenShiftY)
-	love.graphics.draw(currentTileSetBatch, screenShiftX, screenShiftY)
+	-- flooring eliminates screen tearing, make transition slightly jerkier. looks fine enough,
+	-- actually somewhat matches the aesthetic when it's not super smooth
+	love.graphics.draw(currentTileSetBatch, math.floor(screenShiftX), math.floor(screenShiftY))
 end
 
 function drawEnemies()	

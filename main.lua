@@ -33,6 +33,8 @@ globalTileSize = 16
 -- when doing left/right x collisions, you need to use the full box, not just the offset y box for collision
 -- if you use the offset y box (the bottom part of the sprite used for y collisions) then you can slip under tiles left and right 
 -- if there's a tile at the bottom of the screen, you'll be able to slip under because there's no collisions going on for the top bit of the sprite 
+-- OKAY, so actually thats a lie. This has more to do with how scrolling works
+-- need to change scrolling to check to bottom right corners and not just the top left corner for scrolling
 
 --NOTE: 
 -- add a simple mem profiler 
