@@ -91,7 +91,7 @@ function convertGridToTilemapWorld(maps)
 		mapList[i] = {}
 		for j=1,#cMap[1]/tilesDisplayWidth do 	
 			
-			local currentScreen = {collisionMap = {}, visualMap = {}, enemies = {}} 
+			local currentScreen = {collisionMap = {}, visualMap = {}, enemies = {}}--, stairTile = nil} 
 			
 			
 			for y=1,tilesDisplayHeight do

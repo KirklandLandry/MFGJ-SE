@@ -29,6 +29,8 @@ local scaleValue = 4
 -- default tile sizes are 16x16
 globalTileSize = 16
 
+-- NOTE: stairs added, need to now check for collisions with stairs
+
 --NOTE: 
 -- add a simple mem profiler 
 

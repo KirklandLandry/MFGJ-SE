@@ -14,6 +14,26 @@ local filled = 2
 -- ensure all regions are joined
 -- treasure needs to go on an edge 
 
+
+
+local topTile = 1
+local bottomTile = 2
+local rightTile = 3
+local leftTile = 4
+local topLeftTile = 5
+local topRightTile = 6
+local bottomLeftTile = 7
+local bottomRightTile = 8
+local floorTile = 9
+local stairTile = 0
+local fillTile = "a"
+local allBorder = "b"
+local upLeftDown = "c"
+local upRightDown = "d"
+local leftDownRight = "e"
+local leftUpRight = "f"
+local upDown = "g"
+local leftRight = "h"
 	
 function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceToStartAlive)
 	assert(width%tilesDisplayWidth==0 and height%tilesDisplayHeight==0, "need to pass in a height such that: width%tilesDisplayWidth==0 and height%tilesDisplayHeight==0")
@@ -26,10 +46,37 @@ function newCave(width, height, tilesDisplayWidth, tilesDisplayHeight, _chanceTo
 		map = doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 	end
 	
+	local stairPosition = getStairwayPosition(map, tilesDisplayWidth, tilesDisplayHeight) 
+	map[stairPosition.y][stairPosition.x] = stairTile
+	
 	local vMap = generateVisualMap(map)
 	
 	printMap(vMap, tilesDisplayWidth, tilesDisplayHeight, true)
+	print("stairs", stairPosition.x/10, stairPosition.y/8)
+
 	return {collisionMap = map, visualMap = vMap} 
+end
+
+function getStairwayPosition(map, tilesDisplayWidth, tilesDisplayHeight)
+	-- quick and dirty 
+	-- obviously make this better later
+	-- make a generic "get random empty position" function
+	local findingStartPosition = true 
+	local safeGuard = 0 
+	local stairPosition = Vector:new(0,0)
+	while findingStartPosition do 
+		stairPosition = Vector:new(math.random(1, #map[1]), math.random(1, #map))
+		if map[stairPosition.y][stairPosition.x] == empty then 
+			findingStartPosition = false 
+		end	
+		safeGuard = safeGuard + 1 
+		if safeGuard > 100 then 
+			findingStartPosition = false
+			if map[stairPosition.y][stairPosition.x] ~= empty then print("stairs generated on filled tile") end
+			-- this will cause errors in positioning (could just land on a filled tile), but that's fine for now.
+		end
+	end			
+	return stairPosition
 end
 
 function printMap(map, tilesDisplayWidth, tilesDisplayHeight, printAsGrid)
@@ -130,8 +177,6 @@ function doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 			if y%tilesDisplayHeight == 0 and y < #result and result[y+1][x] == filled then 
 				result[y][x] = filled
 			end
-			
-
 			if y == (yModCounter*tilesDisplayHeight)+1 and y>1 and result[y-1][x] == filled then 
 				result[y][x] = filled
 			end 
@@ -139,7 +184,6 @@ function doSimulationStep(map, tilesDisplayWidth, tilesDisplayHeight)
 		end
 		xModCounter = 0
 	end
-	
 	
 	return result 
 end
@@ -175,24 +219,6 @@ function countAliveNeighbours(map, x, y, width, height)
 end
 
 
-local topTile = 1
-local bottomTile = 2
-local rightTile = 3
-local leftTile = 4
-local topLeftTile = 5
-local topRightTile = 6
-local bottomLeftTile = 7
-local bottomRightTile = 8
-local floorTile = 9
-local stairTile = 0
-local fillTile = "a"
-local allBorder = "b"
-local upLeftDown = "c"
-local upRightDown = "d"
-local leftDownRight = "e"
-local leftUpRight = "f"
-local upDown = "g"
-local leftRight = "h"
 
 
 function generateVisualMap(map)
@@ -273,6 +299,8 @@ function generateVisualMap(map)
 				elseif not up and not down and not left and right then 
 					result[y][x] = rightTile
 				end
+			elseif map[y][x] == stairTile then
+				result[y][x] = stairTile
 			else
 				result[y][x] = floorTile
 			end
